@@ -5,6 +5,10 @@ gray: #434343
 color: rgb(204,65,37)
 */
 
+.dots {
+  color:#434343;
+}
+
 body {
   padding:50px;
   font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -104,10 +108,6 @@ header {
   margin:auto;
   padding-bottom:50px;
   font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
-}
-
-.dots {
-  color:#434343;
 }
 
 strong {

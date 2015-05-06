@@ -20,7 +20,7 @@
       <section>
       <h1 class="center">{{ page.title }}</h1>
       <p class="center"><i>
-        posted by {% page.post_author %} in [
+        posted by {{ page.post_author }} in [&nbsp;&nbsp;
         {% for c in page.categories %}
         <a href="/{{c}}">{{c}}</a>&nbsp;&nbsp;
         {% endfor %}

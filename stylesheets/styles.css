@@ -2,8 +2,8 @@
 
 body {
   padding:50px;
-  font:14px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  color:#777;
+  font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color:rgb(20,20,20);
   font-weight:300;
 }
 
@@ -60,7 +60,7 @@ blockquote {
 code, pre {
   font-family:Monaco, Bitstream Vera Sans Mono, Lucida Console, Terminal;
   color:#333;
-  font-size:12px;
+  font-size:11pt;
 }
 
 pre {
@@ -99,6 +99,7 @@ header {
   width:270px;
   float:left;
   position:fixed;
+  font:12pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 header ul {
@@ -160,7 +161,7 @@ header ul a strong {
 }
 
 section {
-  width:500px;
+  width:565px;
   float:right;
   padding-bottom:50px;
 }
@@ -181,6 +182,22 @@ footer {
   float:left;
   position:fixed;
   bottom:50px;
+}
+
+.center {
+  margin: auto;
+}
+
+@media screen and (max-width: 500px) {
+  .logo {
+    width: auto 
+  }
+}
+
+@media screen and (min-width: 501px) {
+  .logo {
+    width: 200px
+  }
 }
 
 @media print, screen and (max-width: 960px) {

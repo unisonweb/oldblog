@@ -4,7 +4,7 @@ title: Posts
 paginate_path: "/posts/page:num"
 ---
 {% for post in paginator.posts %}
-<h1><a href="{{ post.url }}">{{ post.title }}</a></h1>
+<h2><a href="{{ post.url }}">{{ post.title }}</a></h2>
 {{ post.excerpt | markdownify }}
 <p><a href="{{ post.url }}">More</a></p>
 <hr/>

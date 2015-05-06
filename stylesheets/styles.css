@@ -20,7 +20,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   color:#434343;
   margin:0 0 20px;
-  font:Quicksand, Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family:Quicksand, Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 p, ul, ol, table, pre, dl {

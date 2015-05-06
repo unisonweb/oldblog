@@ -1,5 +1,10 @@
 @import url(https://fonts.googleapis.com/css?family=Lato:300italic,700italic,300,700);
 
+/*
+gray: #434343
+color: rgb(204,65,37)
+*/
+
 body {
   padding:50px;
   font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -98,7 +103,11 @@ header {
   width:350px;
   margin:auto;
   padding-bottom:50px;
-  font:12pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.dots {
+  color:#434343;
 }
 
 strong {

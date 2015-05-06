@@ -18,19 +18,15 @@
     <div class="wrapper">
       {% include header.html %}
       <section>
-      <h1>{{ page.title }}</h1>
-      <p align="right">[&nbsp;&nbsp;<i>
+      <h1 class="center">{{ page.title }}</h1>
+      <br/>
+      <p class="byline">
+        posted by {{ page.post_author }} in 
         {% for c in page.categories %}
         <a href="/{{c}}">{{c}}</a>&nbsp;&nbsp;
         {% endfor %}
-        </i>]
-        &nbsp;
-        &nbsp;
-        &nbsp;
-        &nbsp;
-        &nbsp;
-        &nbsp;
       </p>
+      <br/>
       {{content}}
       {% include footer.html %}
       </section>

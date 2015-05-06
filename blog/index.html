@@ -4,9 +4,10 @@ title: Posts
 ---
 {% for post in paginator.posts %}
 <h2 class="center"><a href="{{ post.url }}">{{ post.title }}</a></h2><br/>
-{{ post.excerpt | markdownify }}
-<p><a href="{{ post.url }}">More</a></p>
-<hr/>
+<p>{{ post.excerpt | markdownify }} <a href="{{ post.url }}">... more</a></p>
+<div class="dots">
+<div class="center"><p>. . .</p></div>
+</div>
 {% endfor %}
 {% if paginator.total_pages > 1 %}
 <div class="pagination">

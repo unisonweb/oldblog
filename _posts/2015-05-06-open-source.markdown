@@ -1,7 +1,7 @@
 ---
 layout: post
 categories: [meta]
-title: Unison open source
+title: Unison is open source
 post_author: Paul Chiusano
 ---
 

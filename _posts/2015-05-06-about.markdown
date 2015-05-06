@@ -2,6 +2,7 @@
 layout: nocomment-post
 categories: [meta]
 title: About
+post_author: Paul Chiusano
 ---
 
 todo

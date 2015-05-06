@@ -5,10 +5,10 @@ layout: none
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
 	<channel>
 		<title>{{ site.name | xml_escape }} - Gaming</title>
-		<description>Posts categorized as 'gaming'</description>
+		<description>Posts categorized as 'meta'</description>
 		<link>{{ site.url }}</link>
 		<atom:link href="{{ site.url }}/feed.econ.xml" rel="self" type="application/rss+xml" />
-		{% for post in site.categories.gaming limit:10 %}
+		{% for post in site.categories.meta limit:10 %}
 			<item>
 				<title>{{ post.title | xml_escape }}</title>
 				<description>{{ post.content | xml_escape }}</description>

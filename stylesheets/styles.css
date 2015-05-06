@@ -142,3 +142,9 @@ footer {
     color:#444;
   }
 }
+
+.byline {
+  font-size:12pt;
+  font-style:italic;
+  text-align:center;
+}

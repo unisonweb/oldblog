@@ -8,5 +8,5 @@ kramdown:
   input: GFM
   fenced_code_blocks: true
 
-paginate_path: "/blog/page:num"
+paginate_path: "/posts/page:num"
 paginate: 5

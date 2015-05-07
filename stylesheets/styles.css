@@ -18,6 +18,12 @@ body {
   text-align:justify;
 }
 
+@media screen and (max-width: 600px) {
+  body {
+    word-wrap: break-word;
+  }
+}
+
 h1, h2, h3, h4, h5, h6 {
   color:#434343;
   margin:0 0 20px;

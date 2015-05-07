@@ -2,6 +2,65 @@
 layout: post
 title: May 7th 2015 update and roadmap
 categories: [updates]
+post_author: Paul Chiusano
 ---
 
-todo
+If you've read the [About post](/2015-05-07/about.html), you might be thinking:
+
+* Whoever wrote that is completely nuts. (No argument there)
+* This sounds like a ten year research project that will be in a perpetual state of vaporware. (Turns out, NO)
+
+When I first started thinking about this project, it felt like an amorphous, ill-defined blob. But it was such an exciting topic that I kept thinking about it, in between doing other work. I talked with various people, started nailing down an architecture and technical details (which I still need to write up in a form that might be more comprehensible to other folks!), and implemented parts of the system. Eventually, that amorphous blob started to look a lot more like a well-defined engineering project. I don't mean that I worked out absolutely every detail (no software project has this), I just mean that the project began to feel achievable, not ten years from now, but _soon_.
+
+How soon? Well, three months ago, I decided to [take some time off from consulting work](http://pchiusano.github.io/2015-01-26/unison-kickoff.html) to focus [almost exclusively on Unison](http://pchiusano.io/unison). I had a pretty detailed architecture going in and some code already written, but also a number of unknowns. It's now three months later, many of these unknowns are known, and what remains feels more like isolated problems rather than foundational concerns. For instance, even though [the refactoring story isn't fully worked out](https://pchiusano.github.io/2015-04-23/unison-update7.html#refactoring-sessions), it seems like a fun and possible problem to solve, and one can still have a super useful platform even without it. The temporary workaround is making transitive edits manually---yup, it will be tedious in a large codebase, but then, so are a lot of text-based refactorings! And when the refactoring story does get worked out, it will be a huge productivity boon for all users of Unison.
+
+Based on the existing progress and what's left, I'll estimate that if I had a full year to focus on Unison, I'd have something that people could actually use for real stuff. The Unison editor would be fleshed out, with a layer for multiple declarations and more support for embedded graphical views, and you could use it as a replacement for spreadsheets, in addition to supporting general purpose programming. With more people, more time, and more libraries, the platform becomes more useful.
+
+Here's my attempt at summarizing the current progress:
+
+* The basic architecture feels pretty solid. The node is implemented (in Haskell), including the Unison language and typechecker (uses [this algorithm](http://www.mpi-sws.org/~neelk/bidir.pdf)). The language and type system could definitely be made richer, and the node API will likely evolve over time, but these things aren't blockers and can happen alongside other work.
+* There's an expression editor written in Elm, which talks to the node over HTTP+JSON, and it is obvious how to extend the editor to type editing (for supplying type annotations) and type declarations (for creating new data types). Though what is implemented works, I've unfortunately [hit a number of problems with Elm](https://pchiusano.github.io/2015-04-23/unison-update7.html#elm-troubles) and will likely be switching technologies. (Most likely to PureScript or some GHCJS-based solution.)
+  * I am kind of kicking myself for making what ended up being a bad tech choice, but I'd like to put the Unison editor on more solid tech foundations and feel it's better to switch sooner rather than later. It looks like it will be possible to recycle a lot of the code---most of the code, including the UI logic, is just regular pure functions and [pure state machines](https://github.com/unisonweb/platform/blob/master/editor/src/Elmz/Moore.elm) that could easily be ported to other languages. That said, I wouldn't mind getting to delete a lot of that code and getting to rely on an FRP platform with more power than what Elm offers.
+* The Unison evaluator and node data store have really lame, inefficient implementations right now. The data store is basically a single file for each hash, so any sort of searching like what's done by the explorer requires a linear scan through these files (gak!). The evaluator is also the dumbest thing that can possibly work---just directly interpreting the syntax tree, no compilation, preprocessing, nothing. It would be great to improve these things and it's also clear how to do it, it just needs some good ol' fashioned engineering effort. The nice thing is that these improvements can happen alongside other work, and these issues aren't (yet) a bottleneck.
+* The Unison evaluator doesn't currently do remote execution. There's a bit of design work to do here, which I'll write up at some point, but I think the API will end up looking like [Olle Fredriksson's work on Floskel](http://www.cs.bham.ac.uk/~drg/papers/ifl14.pdf), with subexpressions being optionally annotated with the location where they are to be evaluated.  But more on that to follow.
+* The advertised high-level API for data access doesn't exist. This probably needs the most design work, but it's ultimately straightforward and very solvable.
+* As I mentioned, the refactoring story needs some R&D. I know a lot of people that have expressed interest in this problem and there's also been some interesting research in this area. So this might make a nice, fun project for someone, especially since it isn't a bottleneck at the moment, and probably won't be for a while!
+
+If there is interest and people would like to get involved, I can write up some ideas I have for bite-sized projects.
+
+### Roadmap
+
+Here's a tentative roadmap, based on the unrealistic assumption of just me working full time (see below). I don't think these estimates would be off by an order of magnitude---the last roadmap I did, [at the start of the three months I took off](http://pchiusano.github.io/2015-01-26/unison-kickoff.html), ended up being off by about a month. (Right now, I'm basically where I hoped I'd be like a month ago.) The uncertainty around these items feels pretty similar:
+
+* 1-2 months: Investigate Elm replacement tech and transition the Unison editor to the chosen tech. I'd like to take my time investigating options and really pick the right tool this time. I'm thinking up to a month _max_ of R&D and prototyping, and another month to move everything over.
+* 1-2 months: Add a declaration layer to the editor and a few other language features (let bindings and pattern matching are must-haves). Since moving the compiler over to [abstract binding trees](http://semantic-domain.blogspot.com/2015/03/abstract-binding-trees.html), adding new binders like this has become a snap!
+* 1-2 months: Add type editing and type declaration editing to the editor
+* 3 weeks: Editor polish, flesh out some of the interactions, improve fluidity
+
+At this point, let's say 6 months in, the editor will be pretty fleshed out and usable, and the language itself will be nice enough as well. At that point, we have a nice _interface_ to program editing, and focus can move to building out the functionality the platform has access to:
+
+* 1-2 months (timeboxed): High-level data API
+* 1 month: Evaluator supporting remote execution
+* 2 months: Better visualization libraries. The more visualizations that can be created and embedded in Unison panels, the more useful the platform becomes. Panels start to feel like apps, even though they're just ways of viewing a collection of Unison values.
+* 1 month: Other useful libraries to bootstrap the platform
+
+So at around a year of effort, with some buffer, the platform is actually useful. We can start thinking about building clusters of Unison nodes and running massive distributed computations with ease! And with community involvement, who knows what we could accomplish!
+
+#### More realistically
+
+More realistically, I'll be working on Unison part-time, in between [paid consulting work](https://pchiusano.github.io/consulting-services). Although it was nice getting to take time off to focus on this project, I do need to make a living for myself and my family. It's harder to estimate what my capacity on Unison will be, as that will depend on the type of consulting work I take on.
+
+This brings me to my last point...
+
+## <a id="funding"/> Funding
+
+I am extremely thankful for the encouragement I've gotten from people while working on Unison. And a few people have even contacted me unasked to ask if there was a way they could donate to the project. (I think one person suggested I set up a page on [Patreon](https://www.patreon.com/)). On the one hand, this was really encouraging and kind! On the other hand, I wasn't sure how I felt about accepting money for a project with admittedly somewhat vaporware status. Something else I wondered about with accepting donations---if there are multiple contributors to the project, as I hope there ultimately will be, I'm unsure what the fairest way is of splitting up donated funds. I'd love to hear in the comments from people who might have thoughts about this sort of thing.
+
+That said, getting funding for Unison is something I'd like to explore. There are a couple avenues:
+
+* Grassroots support, via a site like [Patreon](https://www.patreon.com/) or Kickstarter. I'm not sure the Kickstarter model makes as much sense, since the project is ongoing. And I'd have to think about how to do this in a way that felt fair.
+* Corporate sponsorship of some sort. I'm not sure how realistic this would be at this point. On the one hand, Unison, once developed, will be super useful to a large number of businesses. On the other hand, since it isn't necessarily useful to anyone _right now_ (except perhaps as a source of ideas) and is quite general purpose, finding such sponsors might prove pretty difficult... though if you are reading this now and represent know of a business or individual interested in possibly sponsoring this project, please [get in touch](mailto:paul.chiusano@stage-n.com)!
+* Other ideas?
+* Some combination of the above
+
+Comments? Thoughts? Questions? Fire away!

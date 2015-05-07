@@ -99,8 +99,9 @@ img {
 
 header {
   width:350px;
+  max-width:100%;
   margin:auto;
-  padding-bottom:50px;
+  padding-bottom:35px;
   font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 

@@ -101,7 +101,7 @@ header {
   width:350px;
   max-width:100%;
   margin:auto;
-  padding-bottom:35px;
+  padding-bottom:30px;
   font:15pt/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
@@ -112,6 +112,7 @@ strong {
 
 section {
   width:565px;
+  max-width:100%;
   margin:auto;
   padding-bottom:50px;
 }
@@ -129,6 +130,7 @@ hr {
 
 footer {
   width:270px;
+  max-width:100%;
   position:fixed;
   bottom:50px;
 }

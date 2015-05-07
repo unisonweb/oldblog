@@ -11,7 +11,7 @@ The result of all this is that most of the time people spend building software i
 
 * Perhaps 70% of developer time is spent dealing with parsing, serialization, and persistence. Values are encoded to and from JSON, to and from various binary formats, and to and from various persistent data stores... over and over again.
 * Another 25% is spent on explicit networking. We don't merely specify _that_ a value must be sent from one node to another, we also specify _how_ in exhaustive detail.
-* Somewhere in between all this plumbing code is a tiny amount of interesting, pure computation, which takes up the remaining 5% of developer time. And there's very little reuse of that 5% across applications, because everyone else has a different.
+* Somewhere in between all this plumbing code is a tiny amount of interesting, pure computation, which takes up the remaining 5% of developer time. And there's very little reuse of that 5% across applications, because every app is wrapped in a different 95% of cruft and the useful logic is often difficult to separate!
 
 These numbers are made up, of course, but if anything they are _optimistic_. And let's also not forget the huge amount of time spent on making a sane (or even pleasing, logical) UI, which imposes yet another parsing boundary since meaningful values must be 'parsed' from the untyped interactions and views of the UI!
 

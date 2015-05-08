@@ -3,9 +3,9 @@ layout: default
 title: Posts
 ---
 {% for post in paginator.posts %}
-<h2 class="center"><a href="{{ post.url }}">{{ post.title }}</a></h2><br/>
+<h2 class="center"><a href="{{ post.url }}#post-start">{{ post.title }}</a></h2><br/>
 <p>{{ post.excerpt | markdownify }}</p>
-<p class="center"><i><a href="{{ post.url }}">full post</a></i></p>
+<p class="center"><i><a href="{{ post.url }}#post-start">full post</a></i></p>
 <br/>
 {% endfor %}
 {% if paginator.total_pages > 1 %}

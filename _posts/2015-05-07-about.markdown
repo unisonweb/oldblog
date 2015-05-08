@@ -57,5 +57,6 @@ Are these things really all achievable? Yes!
 
 ### What's next?
 
-* For more background, check out the [Unison tagged posts here](http://pchiusano.io/unison).
 * Check out the latest [project status updates](/updates).
+* For more background, check out the [Unison tagged posts here](http://pchiusano.io/unison).
+

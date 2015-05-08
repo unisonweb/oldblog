@@ -5,7 +5,7 @@ title: About
 post_author: Paul Chiusano
 ---
 
-<a id="top"/>Software isn't living up to its potential. Programmers still use tools whose constraints [come from the punchcard era](http://pchiusano.github.io/2014-09-30/punchcard-era.html) and users have accepted that [computing is organized as a constellation of rigid software appliances](http://pchiusano.github.io/2013-05-22/future-of-software.html) ("apps") that never seem to work well together and certainly can't be composed or extended. The software world is swimming in a sea of accidental complexity caused by 40 years of accumulated technical debt.
+Software isn't living up to its potential. Programmers still use tools whose constraints [come from the punchcard era](http://pchiusano.github.io/2014-09-30/punchcard-era.html) and users have accepted that [computing is organized as a constellation of rigid software appliances](http://pchiusano.github.io/2013-05-22/future-of-software.html) ("apps") that never seem to work well together and certainly can't be composed or extended. The software world is swimming in a sea of accidental complexity caused by 40 years of accumulated technical debt.
 
 The result of all this is that most of the time people spend building software is wasted on repeatedly solving uninteresting problems, artificially created due to bad foundational assumptions:
 

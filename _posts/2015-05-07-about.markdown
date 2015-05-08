@@ -53,7 +53,7 @@ These premises make many problems simpler and raise some new challenges. Here ar
 * Semantic editing facilitates usage by both nonprogrammers and beginners who may simply "fill in the blanks" using the editor's rich support for autocomplete, as well as expert programmers who can define completely new functionality and views using an editor with extremely rich tooling.
 * Trivial sharing, and _linking to_ Unison panels, values, and types. A Unison panel is itself a Unison term, with a unique hash. Thus, Unison preserves an important aspect of the web: _linkability_. Any publicly available Unison node can expose the set of values it knows about, and others can link to and thus build upon functionality written by others. Unlike applications, Unison panels are a starting point for further composition and experimentation!
 
-These things are all achievable.
+Are these things really all achievable? Yes!
 
 ### What's next?
 

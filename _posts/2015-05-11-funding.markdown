@@ -1,0 +1,14 @@
+---
+layout: post
+categories: [meta]
+title: Funding the project
+post_author: Paul Chiusano
+---
+
+A number of people have expressed interest in supporting the development of Unison. I've set up a [Patreon campaign](https://www.patreon.com/pchiusano) and would certainly welcome your support. You pick an amount you'd like to contribute each month, and of course you can stop your patronage any time. For people who are considering funding, here is a bit more of what I am thinking:
+
+* I decided it didn't really make sense to do a Kickstarter-like campaign. Because I make a living doing consulting, I have flexibility in how much work I take on. So any amount contributed to Unison is useful as I can use it to offset the lost income I'd have gotten from paid client work.
+* If people would like to entrust me with allocating funds for the whole project, the policy I'll use is simple. If miraculously [my Patreon campaign](https://www.patreon.com/pchiusano) accumulates enough revenue to more than fund my working on it full-time, I'd like to use extra funds to add other full-time paid developers to the project, whoever I think is best and is willing and able. My thinking is that I would prefer to have two developers fully funded and able to quit their day jobs than ten developers partially funded still working at their day jobs and bickering amongst each other about what percentages are fair (which very much goes against the spirt of open source and destroys intrinsic motivation).
+* That said, if and when there are other developers contributing seriously to Unison, they are very much welcome to create their own fundraising campaigns (which can be linked to from this blog), and patrons can decide how to split up their donations as they see fit.
+
+If you have any questions, concerns, or encouragement, I welcome your comments! And thank you to everyone who offered advice, suggestions, or encouragement about fundraising.

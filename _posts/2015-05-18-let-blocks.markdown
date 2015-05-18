@@ -83,4 +83,6 @@ Anyway, I'd be curious how other people deal with this who have more experience 
 
 One last update: the project also now has unit tests, made using [tasty](http://documentup.com/feuerbach/tasty) which generates nicely colored, hierarchical test output. Assuming you've gone through the instructions in [the README](http://documentup.com/feuerbach/tasty) the tests can be run from the `node/` directory via `cabal run tests`.
 
+For people who are interested in helping write some code for Unison, I'm sorry I'm not very organized on that front yet. But my intention is to try to organize the work into some well-defined sub-projects that interested folks besides me could work on. Please feel free to come say hello in [the Gitter chat](https://gitter.im/unisonweb/platform).
+
 That's all for now, more updates to follow!

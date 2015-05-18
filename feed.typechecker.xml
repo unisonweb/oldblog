@@ -8,7 +8,7 @@ layout: none
 		<description>Posts categorized as 'typechecker'</description>
 		<link>{{ site.url }}</link>
 		<atom:link href="{{ site.url }}/feed.typechecker.xml" rel="self" type="application/rss+xml" />
-		{% for post in site.categories.updates limit:10 %}
+		{% for post in site.categories.language limit:10 %}
 			<item>
 				<title>{{ post.title | xml_escape }}</title>
 				<description>{{ post.content | xml_escape }}</description>

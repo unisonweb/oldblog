@@ -1,0 +1,12 @@
+---
+layout: post
+title: Quick update
+categories: [updates]
+post_author: Paul Chiusano
+---
+
+This is just a quick update. Having looked at the various GHCJS options for writing the editor, the one that looks the most interesting to me is [Reflex-DOM](https://github.com/ryantrinkle/reflex-dom), so it's the one I'm going to be tinkering with first. I've got it [working with the build](https://github.com/unisonweb/platform/pull/14) and have successfully got "Hello World" running in the browser via GHCJS and Reflex-DOM. Amazingly, it is actually compiling all the Haskell code in [shared](https://github.com/unisonweb/platform/tree/master/shared) to JS. The build process isn't quite as nice as I'd like... which somewhat promped [the last post](/2015-05-22/why-compile.html). 
+
+Look for more updates soon!
+
+Also, thanks very much to the new folks [joining as patrons of the project](https://www.patreon.com/pchiusano?ty=h)!

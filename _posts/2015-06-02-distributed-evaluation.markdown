@@ -62,8 +62,8 @@ Thus multiple evaluations may be spawned at different nodes, and their results c
 -- try evaluation at the first node, then the second node, until one succeeds
 fallback : List Node -> a -> Remote (Future a)
 
--- try evaluation of each in parallel, return first result, cancel the rest
-race : List (Future a) -> Remote a
+-- try evaluation on each node, return first result, cancel the rest
+race : List Node -> a -> Remote (Future a)
 ```
 
 So we can recover from errors, but only to repeat the same computation. Or we can run duplicate copies of a computation. (You might be able to imagine some other useful functions, like `quorum`.) But we can't directly catch an error and then make a decision based on this fact. The idea here is that a `Remote a` value is just like an `a`; the distributed evaluation is just an "implementation detail". Later we'll introduce the type `Remote! a`, which includes some extra capabilities.

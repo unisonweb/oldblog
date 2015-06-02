@@ -251,7 +251,7 @@ Like any other value, we can send the `Thunk` between nodes, and the body of a `
 
 ``` Haskell
 sharedAt : Node -> a -> Remote a
-sharedAt n a = map force (at n (thunk a))
+sharedAt n a = map force (at n (share a))
 
 force : Thunk a -> a
 ```

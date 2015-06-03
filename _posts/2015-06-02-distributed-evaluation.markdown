@@ -200,19 +200,21 @@ This is just meant to be suggestive, there are many details to work out (though 
 
 Exciting stuff, and Unison will get there.
 
-### <a id="security"></a>Security
+### <a id="security"></a>Security and privacy
 
 These APIs seem pretty handy, but what about security? If we are accepting thunks to evaluate from any other Unison node (or a nefarious attacker impersonating a Unison node), how do we protect ourselves from attackers running code that deletes our home directory or takes over our machine?? If Unison nodes were running arbitrary C code, this would be a difficult problem. But Unison is a purely functional language, and running pure code is always safe. The worst pure code can do is fail to terminate, which can be addressed just by giving foreign expressions being evaluated a time budget for evaluation.
 
-All right, but sometimes we will actually want to allow some evaluation of effects. For instance, a node may wish to allow another node to read or write certain values to node local storage, or allow sending messages to a certain other node along a particular channel. So more generally, the recipient node of a foreign expression should evaluate the expression in a sandbox. This is extremely simple.
+All right, but sometimes we will actually want to allow some evaluation of effects. For instance, a node may wish to allow another node to read or write certain values to node local storage, or allow sending messages to a certain other node along a particular channel. So more generally, the recipient node of a foreign expression should evaluate the expression in a sandbox. 
 
-A sandbox is represented as a collection of hashes and/or builtin function references. Since Unison expressions are [linked _only_ at runtime](/2015-05-22/why-compile.html#post-start), it simply isn't possible for an expression to statically "bake in" the definition of some function it shouldn't have access to. The only place it can obtain definitions for functions and ways of evaluating builtins is at runtime, from the runtime environment, so it is trivial to just only.
+The way this works is quite simple. A sandbox is represented as a collection of hashes and/or builtin function references. Since Unison expressions are [linked _only_ at runtime](/2015-05-22/why-compile.html#post-start), it simply isn't possible for an expression to statically "bake in" the definition of some function it shouldn't have access to. The only place it can obtain definitions for functions and ways of evaluating builtins is at runtime, from the runtime environment, so it is trivial to provide access to a limited set of capabilities.
 
-A node can have a sandbox associated with every other node that attempts remote evaluation. The permissions can be very fine-grained. Node _Alice_ might allow node _Bob_ to remotely evaluate pure code, _not including subtraction_. Or perhaps _Alice_ allows _Bob_ to read just a single number. More general policies are possible, here are just a few ideas:
+A node can have a sandbox associated with every other node that attempts remote evaluation. The permissions can be very fine-grained. Node _Alice_ might allow node _Bob_ to remotely evaluate pure code, _not including subtraction_. Or perhaps _Alice_ allows _Bob_ to read just a single number. But _Alice_ might allow node _Eve_ to evaluate _all_ pure code. More general policies are possible, here are just a few ideas:
 
 * Allow only evaluation of pure code (with a small time budget) from arbitrary nodes
 * Allow all capabilities for any node that can prove ownership of a private key
-* Allow read-only access to certain parts of the node data store, for any node that can prove ownership of a cryptographic token. Imagine keeping personal information (like your address, phone number, allergies or medical history) on a Unison node that you control, and releasing it in this way to authorized third parties. No more updating your address in 50 different places every time you move or supplying the same information every time you visit a new medical provider.
+* Allow read-only access to certain parts of the node data store, for any node that can prove ownership of a cryptographic token. Imagine keeping personal information (like your address, phone number, allergies or medical history) on a Unison node that you control, and releasing it in this way to authorized third parties. 
+
+This last point is pretty interesting, and deserves its own post. But briefly: we can start to imagine a world in which you keep all _your data_ on a Unison node that you control. You perhaps allow businesses or other parties to run computations on subsets of your data, with access controlled by expiring cryptographic tokens. By restricting the capabilities you assign to different sandboxes, you can prevent remote code from "phoning home" and sending your personal information back to some foreign servers, or otherwise mucking with information it shouldn't have access to.
 
 And so on. None of this stuff is difficult. Starting with a functional language with typed effects makes for a much easier starting point for sandboxing than "arbitrary x86 assembly".
 

@@ -200,7 +200,7 @@ This is just meant to be suggestive, there are many details to work out (though 
 
 Exciting stuff, and Unison will get there.
 
-### <a id="security"></a>Security and privacy
+### <a id="security"></a>Security, privacy, and node-specific code
 
 These APIs seem pretty handy, but what about security? If we are accepting thunks to evaluate from any other Unison node (or a nefarious attacker impersonating a Unison node), how do we protect ourselves from attackers running code that deletes our home directory or takes over our machine?? If Unison nodes were running arbitrary C code, this would be a difficult problem. But Unison is a purely functional language, and running pure code is always safe. The worst pure code can do is fail to terminate, which can be addressed just by giving foreign expressions being evaluated a time budget for evaluation.
 
@@ -212,9 +212,30 @@ A node can have a sandbox associated with every other node that attempts remote 
 
 * Allow only evaluation of pure code (with a small time budget) from arbitrary nodes
 * Allow all capabilities for any node that can prove ownership of a private key
-* Allow read-only access to certain parts of the node data store, for any node that can prove ownership of a cryptographic token. Imagine keeping personal information (like your address, phone number, allergies or medical history) on a Unison node that you control, and releasing it in this way to authorized third parties. 
+* Allow read-only access to certain parts of the node data store, for any node that can prove ownership of a cryptographic token. Imagine keeping personal information (like your address, phone number, allergies or medical history) on a Unison node that you control, and releasing it in this way to authorized third parties.
 
 This last point is pretty interesting, and deserves its own post. But briefly: we can start to imagine a world in which you keep all _your data_ on a Unison node that you control. You perhaps allow businesses or other parties to run computations on subsets of your data, with access controlled by expiring cryptographic tokens. By restricting the capabilities you assign to different sandboxes, you can prevent remote code from "phoning home" and sending your personal information back to some foreign servers, or otherwise mucking with information it shouldn't have access to.
+
+#### Node-specific computations, keeping implementations private
+
+There's one last use case which is trivially enabled by this architecture, and that is sharing access to an interface, without granting access to the implementation of some code you prefer to keep private. As an example, suppose you're a car insurance company and want to let people get rate quotes, but you don't want the details of how you come up with a rate become public. Right now, you build a page on your "website" (yes, those are scare quotes) whose main purpose is for the user to supply the necessary arguments to your (secret) rate quote function, which you of course run on your servers and then generate a "page" which has some rendering of the result of calling your secret function. Isn't this a bit silly?
+
+Instead, you can simply grant other nodes access to a remote version of your function:
+
+```Haskell
+rateQuote : Age -> DrivingRecord -> Rate
+rateQuote age record = -- TOP SECRET!
+
+rateQuote' : Age -> DrivingRecord -> Remote Rate
+rateQuote' age record = at here! (rateQuote age record)
+
+-- resolved by the editor statically to the current node
+here! : Node
+```
+
+You now configure your node to only expose `rateQuote'` to other Unison nodes for syncing. Remember that `rateQuote'` is a proper Unison term, with its own unique hash, which can be trivially shared with other nodes. Any other node may obtain a reference to `rateQuote'`, which is a function that will evaluate the `rateQuote` function on the car insurance company's node.
+
+This is useful for other things besides just keeping implementation details private. A Unison node may reference functionality _specific to the node_. Eventually, Unison will grow a FFI for including foreign functionality, and Unison can be used to expose a nice API for either hardware or sensors specific to a particular node. We may have a stripped-down Unison node running on some physical device (your refrigerator, say), with particular physical sensors. Access to these sensors can be exposed to Unison and accessed by other nodes. This also works for exposing access to a cluster or network infrastructure. Say you want to expose a cloud service with a nice API, and you are managing your own servers. Using the Unison FFI, you wrap your ecosystem in a Unison API, and expose various `Remote` functions, which other nodes in the Unison web can consume easily. By using a common platform, Unison, with a super nice API, you have much less work to overcome switching costs and network effects that benefit larger and more established cloud service providers.
 
 And so on. None of this stuff is difficult. Starting with a functional language with typed effects makes for a much easier starting point for sandboxing than "arbitrary x86 assembly".
 

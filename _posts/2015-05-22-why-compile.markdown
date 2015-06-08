@@ -1,6 +1,6 @@
 ---
 layout: post
-categories: [soapbox]
+categories: [musings]
 post_author: Paul Chiusano
 title: Why are we still "compiling" and "building" code?
 ---

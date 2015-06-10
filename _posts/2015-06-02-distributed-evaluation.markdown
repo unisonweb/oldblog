@@ -121,6 +121,7 @@ There's a lower-level, more imperative API that can be used to implement the abo
 
 ```Haskell
 type Remote! a -- opaque
+type Channel a -- also opaque
 type Err = Timeout | Msg Text
 
 remote! : Remote a -> Remote! a

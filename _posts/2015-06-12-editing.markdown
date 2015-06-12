@@ -1,0 +1,255 @@
+---
+layout: post
+title: Large-scale, well-typed edits in Unison, and reimagining version control
+categories: [design]
+post_author: Paul Chiusano
+---
+
+This post describes a design for how to make large-scale edits to a Unison codebase, while ensuring these edits produce code that is well-typed. The approach I'll describe here is simple, implementable, and has some nice properties:
+
+* It is _sound._ All stages of editing consist of a well-typed codebase.
+* It is _complete._ From any starting codebase we can get to any other codebase.
+* It is _concurrent._ The core edit data structure (simple enough to give right here in this post) comes equipped with a commutative merge function; thus multiple programmers may concurrently build up an edit, sharing their work asynchronously (a la existing VCS like Git) or synchronously in real-time, all without errors or conflicts.
+* It is _incremental._ Edits currently under development have a completed portion that is well-typed, useful to others working on different edits, and if we wish these can be shared immediately. We aren't _forced_ into a workflow in which edits are built up in an entirely separate universe, invisible and unusable to others, and merged in a single discontinuous commit when the work is 'completed'.
+
+These properties are all quite easy to achieve given the assumptions made by Unison. Sounds nice, huh? Keep reading!
+
+Thanks very much to Edward Amsden, who has done [work on a well-typed edit calculus](https://ifl2014.github.io/submissions/ifl2014_submission_32.pdf) and was generous enough to hop on the phone, explain his work to me, and brainstorm how to use similar ideas for well-typed transformations of entire codebases. Besides just the directly useful stuff from his work, he helped me see this problem from a new perspective.
+
+Feedback, questions and comments are most welcome! Especially if you can poke holes in it. _Disclaimer: none of this is implemented yet, this is just design work._ I also feel less confident about this work than the [distributed systems API design](/2015-06-02/distributed-evaluation.html). If you spot any holes or problems with the design I would like to hear about it!
+
+## Revisiting old assumptions
+
+Before getting to the design, let's take a step back and revisit some old assumptions. In the current world, what we think of as "the codebase" is a collection of text files. When you want to make an edit to your code, you generally modify these files in place, and [then rebuild the code](http://unisonweb.org/2015-05-22/why-compile.html#post-start). When you're satisfied that your blob of text diffs form a logical unit (which hopefully parses and typechecks!), you create a commit in Git, Hg, whatever. You then share that commit with others by pushing it up to GitHub, say.
+
+This workflow is ingrained in our collective minds, so much so that we don't really question it. Let's take a closer look. The model here is that sharing code edits is _asynchronous_, often the span of hours or even days or weeks. The other end of the spectrum would be _synchronous sharing_, in which _N_ developers edit a single codebase in real-time and view each other's changes as they are made. I won't argue that synchronous or asynchronous is inherently better, but here is an observation:
+
+> _Synchronous sharing of edits does not scale to N > 2, for technical reasons having to do with 'editing via in-place text munging' being the dominant paradigm._
+
+When you make edits by modifying text files, it's a simple fact that the code is in a broken (unparsable and/or not well-typed) state much of the time. Say you just added an extra parameter to a function---in fact you've "deleted" the old function, replaced it with a different one, and now all its callers are temporarily broken. Or maybe you just started writing an `if` expression or pattern match but haven't finished it yet, and your code doesn't even parse. At various points, everything builds, but a lot of the time, it doesn't. If you're pair-programming with someone (_N_ = 2), this is tolerable since you're working together on the same task. But if you simply want _N_ people to be able to work on different parts of a codebase concurrently, you have a problem. If everyone's edits are constantly synced, odds are good that the code is in a constantly broken state.
+
+So, in part out of technical necessity, the current model is that everyone works on a copy of the code and shares changes asynchronously. Of course there's some overhead to making these commits and pushing them to a central place (both computational overhead, and mental overhead) so people often don't commit and/or share their changes as often as could make sense for the logical structure of the edits being made.
+
+This is kind of a shame, since many logical edits are at least in principle amenable to concurrent development. Let's take that edit of adding an extra parameter to a function. All the callers of that function now need updating (at a minimum), but quite likely edits to these dependents could proceed concurrently. Allowable concurrency is constrained only by the dependency graph of the code we are editing. Of course, we never get anywhere near this level of concurrent development, and perhaps it's in part because we've never worked with tooling that made it even technically feasible! Tooling doesn't just make us more or less productive---it also affects how we think and _what possibilities are even considered._
+
+Even if we could solve this first problem and somehow avoid having a constantly broken codebase, we also share work asynchronously for a couple other reasons:
+
+* To defer the choice of whether to propagate the changes. If an approach doesn't work out, better to have made the changes to a copy, rather than the version everyone else is using.
+* To control the granularity at which we share chunks of work with others. This is something that matters to people. (Remember when [Google Wave](http://en.wikipedia.org/wiki/Apache_Wave) shipped with a transmit as you type feature that was _impossible to turn off?_ It was extremely frustrating and among many other things contributed to Wave's downfall.)
+* We aren't always connected to the internet, but it's nice to still be able to make edits to code without an internet connection.
+
+So we have a lot of concerns here, but if we look closely we see that many of them are artificial, an artifact of assumptions we've made:
+
+* Because we're editing code in place and the code is constantly broken, synchronous edits don't scale. _But we can lift this restriction by never modifying code in place._
+* Because we're editing in place, we're hesitant to decide up front to propagate these changes, so we use asynchronous edits. _But if we never modify code in place, we can (if we like) synchronously share our edits._
+
+The problem is not so much with synchronous sharing of edits, it's with _concurrent mutable state_. Having multiple people concurrently mutate the same piece of state (the codebase) leads to all sorts of difficulties and forces our hand. Even if there are cases where more synchronous sharing is appropriate, we don't even _consider_ the possibilities because we've been forced into a workflow where only asynchronous edits are possible.
+
+The design given below lifts all the technical restrictions on synchronous sharing of edits. It lets us replicate old asynchronous workflows where useful or desired but also enables new ways of collaborating. Imagine tens, hundreds or thousands of programmers all over the world working together in real-time (or perhaps I should say "in unison"), cooperating on large-scale edits to a codebase. Or how about just remote pair programming that actually _works well_.
+
+## The idea
+
+In Unison, values and types are uniquely identified by a hash of their content. The hash never changes, and all references are by _hash_. Mapping from hash to human-readable names is done via separately stored metadata. Let's look at an example:
+
+```Haskell
+wrangle : Text -> Text
+wrangle txt = ...
+```
+
+The hash of `wrangle` is uniquely determined by its implementation and isn't affected by things like what parameters are named ([more details](http://unisonweb.org/2015-05-18/let-blocks.html#hashing)).
+
+When we reference `wrangle` while defining another function, the Unison editor isn't inserting `wrangle` in the syntax tree, it inserts the _hash_ of `wrangle`:
+
+```Haskell
+wrangleUser : Text
+wrangleUser = wrangle "Important message!"
+```
+
+Other functions that depend on `wrangle` work similarly. The hash is how things are referenced, and names are just used for display purposes.
+
+In this model, "modifying" a function like `wrangle`, say by adding a parameter, produces a new function with a different hash. The old hash is still valid, still exists in the code store, and the new hash is _referenced by no one_, at least initially. The `wrangleUser` function we wrote previously still references the old version of `wrangle`, and hence is still well-typed. This is just a consequence of the fact that names are resolved to a hash _at edit time_, rather than leaving _names_ in the syntax tree and resolving these names _at compile time_. (Related: [Why are we still compiling code?](http://unisonweb.org/2015-05-22/why-compile.html#post-start))
+
+_Aside:_ But actually, all this talk of "versions" of `wrangle` is a bit of a lie. The two functions are distinct, with distinct hashes. Any association between these two functions is "just" metadata we might want to keep around to aid human understanding. In some sense, it is arbitrary at what point we still consider two hashes to be related. (If I changed `wrangle` to `wrangle = 42`, is it still meaningful to say it is 'the same function'?) We could discard any association between hashes; Unison does not care. Though I'm going to continue talking about "versions" in this post just know that it's more of a convenient shorthand for a different hash that we'd like to say is related to another!
+
+This leads to our first key insight, which is that an edit is well-typed (or not) _with respect to a particular scope_.  When you edit code by modifying files in place, the scope of your edit is implicitly "the entire codebase", consisting of all types, terms, modules, etc that could transitively depend on your initial edit. Very often, your edit isn't well-typed at that scope, so your initial changes produce a slew of compile errors at this larger scope. But all useful edits _can_ start out well-typed at a smaller scope. Thus, the way to make a large-scale edit that remains well-typed at every stage is not to limit what edits are possible, _but to gradually increase the scope of the edit._ (For people who have been following Unison progress for a while, this is essentially the approach [outlined here](http://unisonweb.org/2015-05-22/why-compile.html#post-start), we're just going to create a data type and functions to cleanly manage the bookkeeping.)
+
+For instance, our new version of `wrangle` may be well-typed on its own, but if we are to consider it a replacement for the old `wrangle`, we have to update dependents of the old wrangle, like `wrangleUser`. And if we end up modifying the type of `wrangleUser`, then we may have to further increase the scope to include all values that depend on the old `wrangleUser`, and so on. Simple, right? At each stage, we have a well-typed codebase, we are just gradually expanding the scope of our edits to cover all the transitive dependents of our original edits. We can stop at any point and still have a well-typed codebase.
+
+I've been talking about 'scope' informally, what is a 'scope', more precisely? A scope is just a set of hashes. When we say we have an edit that is well-typed with respect to a particular scope, we mean that we have an updated version of all hashes in the scope.
+
+With this notion of scope, it becomes more clear that our conventional notions of a codebase boundary are quite artificial. When you make an edit to some library, you update all the transitive dependents, but only out to the arbitrary boundary of the bag of text files that you call your library. In principle though, the edit could be expanded in scope to include other "libraries" that reference yours, and it could be contracted to include a smaller subset of the members of your codebase. Of course, the tooling we use today makes this more fine-grained scoping of edits extremely inconvenient, so people generally never do it.
+
+The Unison model is that the edit is itself a first-class object, and you can extend the edit out to whatever scope you want while retaining complete fine-grained control over scope. You can take an edit and hand it off to someone else "midway through" who extends it out to some greater scope! Ten different people can collaborate to increase the scope of an edit---if it's trivial to hand off an edit and have people develop it concurrently, upgrades to software can be done on a much larger scale, with each bit of work delegated to the people best able to make the edits.
+
+## The design
+
+Now that we have the key idea, we need a data type and some functions to handle the bookkeeping. Let's look at the data type first. It's quite simple. I'll explain what it means below:
+
+```Haskell
+data Edit h =
+  Edit { closed :: Map h (Set h)
+       , opened :: Map (h,h) (Set h) }
+```
+
+The `h` parameter is meant to be suggestive of 'hash', but we're actually parametric in the thing being edited and will assume as little about it as possible.
+
+An `Edit` has two parts, a 'closed' portion, and an 'opened' portion. The closed portion is a mapping from old hash to new hash(es). This is the completed portion of the edit, and the values in `closed` can be added incrementally to the code store (or not) where they are available to anyone. The 'scope' we talked about earlier is just the keys of `opened`:
+
+```Haskell
+scope :: Edit h -> Set h
+scope = Map.keysSet . closed
+```
+
+Each hash in `closed` maps not to one hash but a `Set` of them. Why is that? Well, generally the `Set` will have a single element, but when merging two `Edit` values, we may have disagreement about how to upgrade a particular hash. You might call this a 'conflict', but it's not really. If a key in `opened` has multiple values, the `Edit` is merely specifying that a hash has more than one possible future. Of course, we can decide at any point later that we're actually only interested in one of these possible futures, but that's not the concern of the `Edit` data type, just an operation we can perform on an `Edit`:
+
+```Haskell
+resolve :: Ord h => (Set h -> h) -> h -> Edit h -> Edit h
+resolve r h (Edit closed opened) =
+  Edit (Map.adjust (Set.singleton . r) h closed) opened
+```
+
+There are likely other operations useful for this sort of thing. See [the gist](https://gist.github.com/pchiusano/e429df1827504ae50de3) for some ideas. Figuring out a good set of operations to support typical programmer workflows needs further design work, but the data type gives us the information we need.
+
+The library has no preference about whether or when you choose to `resolve` 'conflicts'. I prefer this model to traditional VCS, where all differing ideas about how to edit a chunk of code must be resolved, at the scope of the entire codebase, before proceeding with _any_ further commits. See how this constraint is artificial? Moving away from the codebase as blob of text and instead identifying things by hash lets us remove yet another legacy constraint on programmer workflow.
+
+When we later look at the merge function for `Edit` values, `e1` and `e2`, we'll see that merging the `closed` portion is as easy as `Map.unionWith Set.union (closed e1) (closed e2)`. We merge the maps and if there are collisions, take the union of the two colliding sets.
+
+### Opening edits
+
+Let's return to our original example:
+
+```Haskell
+wrangle : Text -> Text
+wrangle txt = ...
+
+wrangleUser : Text
+wrangleUser = wrangle "Important message!"
+```
+
+What happens if we want to modify `wrangle` to accept another parameter:
+
+```Haskell
+wrangle : Text -> Number -> Text
+wrangle txt n = ...
+```
+
+In the codebase as bag of text files, we might modify the definition in place, and then go fix a slew of type errors at all the code that depends on `wrangle`. Not only is this a terrible user experience, it also [doesn't scale to more substantial edits](https://pchiusano.github.io/2015-04-23/unison-update7.html#refactoring-sessions). So we're going to do something different. When opening a term `e` for editing, we will be given a little universe in which the dependency between `e` and its old dependents is severed. In this little fork of the universe, unconstrained edits are possible. Only when we want to close edits to dependents of that term do we require that the types line up.
+
+This might sound complicated, but it's actually simple. Let's look at our example of `wrangle`. Suppose for now that `wrangleUser` is the only dependent of `wrangle`. In that case, we will create the terms:
+
+```Haskell
+wrangle' : Text -> Text
+wrangle' txt = ...
+
+wrangleUser' : (Text -> Text) -> Text
+wrangleUser' wrangle = wrangle "Important message"
+```
+
+We've broken the dependency of `wrangleUser` on `wrangle` just by adding an argument. This is something functional programmers do all the time. If we wanted, we could 'close' the edit to `wrangleUser'`, binding `wrangle'` to that first parameter. But notice what we have---a little universe in which `wrangleUser'` does not depend on `wrangle'`, and of course nothing yet references `wrangle'`. With this dependency now broken, we are unconstrained in modifying `wrangle'` and `wrangleUser'`, other than keeping them individually well-typed (more on that later). When we're done, we can 'close' the edit to `wrangleUser'`, which binds `wrangle'` as the first argument to `wrangleUser'` (assuming this is well-typed of course) and adds the mapping `(wrangleUser, wrangleUser')` to the `closed` mapping of the `Edit`. When interacting with an `Edit` in the UI of the Unison editor, the editor provides an indication of whether a currently selected open term can be closed.
+
+When an open term like `wrangle'` has no further dependents to update, we can close it, adding its mapping to the `closed` part of the `Edit`. But notice that we get to choose what dependents to update. Perhaps we want to edit `wrangle`, but realize we don't care about updating `wrangleUser`. That is perfectly fine! There is no need to do a "complete codebase upgrade" if we don't want.
+
+Now we can understand the `Map (h,h) (Set h)` used to represent the `opened` portion of the `Edit`. In our example, there would be an entry `((wrangle, wrangle'), {wrangleUser'})`. It is keyed by the `(old,new)` hash for the term that is open, and the `Set h` is any immediate dependents. Interacting with the edit just modifies this `opened` portion in predictable ways.
+
+The `Edit` data type has no opinion on what sort of UX to expose for all this. But I'll mention a couple ideas:
+
+* When closing a term with a different type than the previous version, by default, we may want to open all the dependents of that term. So if we end up modifying the type of `wrangleUser` from `Text` to `Number -> Text`, say, then we open `wrangleUser`, supplying the new version of `wrangleUser'` as the goal that all dependents need to be compatible with. This isn't a requirement, we can of course just wait for the user to manually open `wrangleUser` and supply the edited `wrangleUser'`.
+* For any `closed` term in the `Edit`, if we aren't changing the type (or we change it to a subtype), it is sound to update any transitive dependents of that term and add these updates to the `closed` mapping. This operation, which I'll call `propagate`, can be applied at time to transform an `Edit`. Its effect is to maximize the `scope` of an `Edit`, and it is idempotent. This lets us preserve a very similar workflow to in-place editing of code. We start with some initial edits, make changes from there, and once we reach a point where we're able to preserve types, we're done---we can complete the edit via a `propagate`. The main difference is that `propagate` is an explicit operation, rather than something that just happens implicitly because we're mutating code in place.
+
+_Aside:_ We can also 'reopen' a hash after it's been closed. The implementation is subtle, but we need to reopen any transitive dependents as well and preserve progress. Building up edits works best using a breadth-first traversal of the dependency DAG.
+
+Let's now have a look at the merge function for `Edit` values:
+
+```Haskell
+-- commutative monoid for merging edits
+instance Ord h => Monoid (Edit h) where
+  mempty = Edit Map.empty Map.empty
+  mappend (Edit c1 o1) (Edit c2 o2) = Edit c o
+    where
+    keep c (h,h2) = maybe True (Set.notMember h2) (Map.lookup h c)
+    c = Map.unionWith Set.union c1 c2
+    o = Map.unionWith Set.union o1' o2'
+    -- subtract from `o2` any entries closed by `c1`
+    -- and subtract from `o1` any entries closed by `c2`
+    o2' = Map.filterWithKey (\e _ -> keep c1 e) o2
+    o1' = Map.filterWithKey (\e _ -> keep c2 e) o1
+```
+
+This is important. We have a _commutative merge function_ for our `Edit` type. The implementation merges corresponding keys in `closed`. And any `opened` values that are closed by the other side of the edit are closed. Any values open in both remain opened. Thus if someone else completes an edit you get their work, unless you've taken the root term in a different direction in which case it is preserved.
+
+With a commutative merge function, we can have multiple people work concurrently on the same `Edit`, merging their results in real-time if we want. Of course, nothing stops you from sharing work asynchronously either.
+
+The problem is now reduced to making well-typed edits to a single expression. I hope to convince Edward to do a guest post on that, as I think his work has a very interesting approach. But I think that even without any extra machinery, making well-typed edits to a single expression can be done 'manually', by rebuilding the expression bottom up, using copy/paste, etc. When an expression is open, you really are unconstrained and may just use fragments of the original to build up something that typechecks. Since we aren't modifying in place, the old code is still available for reference, and the UI can make it easy for us to grab bits and pieces from it while building our modified version.
+
+The same idea and `Edit` type also extend to making changes to _data types_. The only things that differ are 1) the notion of how to compute dependents---for a data type, it may be other data types, as well as any terms that reference the type. And 2) the way we break the dependency is by building up a record of functions used in the body of the dependent. This is a bit like getting access to a typeclass that abstracts over the concrete data type used by the dependent.
+
+There is a bit more bookkeeping but the same `Edit` type still works. We're now done. Let's summarize:
+
+* We have a way of making arbitrary edits to a codebase, without ever having to break the code. The trick is to not modify code in-place, and incrementally increase the scope of our edit.
+* The amount of work we have to do is the same as if we edited our codebase in-place. We only have touch the parts of the dependency DAG where we modify the types (in the old mode of working, these would show up as type errors to fix). The rest of the changes can be propagated out automatically.
+* We never have to deal with type errors. We work only with well-typed programs. But, the editor can give us all the information we need to understand what changes need to be made in order to continue expanding the scope of an edit.
+* We get a commutative merge function for edits, and _N_ programmers can collaborate on an edit in real-time or more asynchronously.
+
+## <a id="questions"></a> Big questions
+
+Now that we have the core worked out, I have a couple big questions:
+
+* What does all this mean for "version control"? What aspects of existing version control software are still relevant for Unison?
+* What is the new programmer workflow, either working individually, or collaborating with others? What is the actual user experience? How can we meaningfully present information about edits to the programmer?
+
+And there's a deeper question---what is VCS really "about"? Perhaps VCS is really about several distinct concerns:
+
+* Supporting concurrent development
+* Maintaining history, for lots of reasons, including auditability
+* Providing _commentary_ on edits, and possibly on groups of edits
+* Having a notion of logically related branches of development
+
+The ideas presented above are a solution to the first three points. We can make concurrent edits easily, and history is maintained, because we never delete anything. We retain the relationships between hashes---if an edit of one hash produces another hash, we store this association as metadata, just like a VCS might store this info at the level of the whole source tree. And providing commentary describing is also trivial with this approach, just associate some text with each `Edit`.
+
+What about this last concern? When we use Git, we often work with several branches. Logically, it's all just a DAG of hashes, but we have some persistent _name_ used for lines of development. We might have branches "stable", "dev", and "production". We might have a feature branch, "topic/morebetter". Is this stuff still relevant? The answer to this question affects what sort of workflow we expose to the programmer.
+
+Something we will definitely need is a persistent name for a connected series of edits. If I am working on building up an `Edit`, the `Edit` itself can have a hash, but I want to assign a single name to all the versions of the `Edit`, so that I can easily share and merge my latest progress with others, using a single name. This part seems easy. Just as in Git, where 'branches' are just names associated with a hash, and committing to the branch just updates what hash the branch name is associated with, we can have a name associated with an `Edit`, and have the Unison editor change what particular state of the `Edit` that name points to as the programmer interacts with the UI.
+
+But an `Edit` isn't quite analogous to a branch. It's more like a diff which we build up incrementally, starting from some initial diff. Once we reach the scope we're interested in, we're done with the edit since all the code exists in the code store (assuming we add the new hashes incrementally as we work). Although nothing prevents us from continuing to add unrelated logical changes to the same `Edit`, that's probably not a good idea (just like it's not a good idea to add unrelated work to a feature branch created for a specific purpose).
+
+Do we still need 'branches'? I am not sure. I think we at least need something like _tags_ or versions, so that multiple programmers can coordinate on what version of the code to base their edits on. In Git, versions of the code are uniquely identified by a hash of the entire source tree, incorporating the hash of the parent version(s). In Unison, a version might analogously be _set of hashes_ (perhaps reduced to a single hash), which uniquely identifies a set of particular implementations. Unlike Git, we have no codebase global scope at which to assign a single hash, but the notion of "codebase scope" was always rather arbitrary anyway.
+
+Now where to go from here? This topic definitely needs more thought. If you have ideas, please leave a comment, or join [the chat room](https://gitter.im/unisonweb/platform).
+
+### Is semantic version control even a good idea?
+
+I've been really interested in the idea of semantic version control for a while, in which the unit of edits is not text diffs or even tree diffs, but _semantic edits_ that map more directly to programmer intent. So, an edit might be 'swap the order of these two function parameters' or 'rename this function parameter from x to x2'.
+
+Assuming you could work out a nice edit calculus, the appeal of this approach seems to be that more changes can be merged without needing manual resolution. For instance, if Alice swaps the order of the parameters, and Bob renames a parameter, well, these two edits can be merged. Using text or even tree diffs as the basis for VCS makes it unlikely that we'll be able to resolve these concurrent changes without human intervention:
+
+```Haskell
+foo x y = ...
+
+-- Alice
+foo' y x = ...
+
+-- Bob
+foo'' x1 y = ...
+```
+
+At the level of a text diff, we have a conflict on the first line. And at the level of a tree diff, we _also_ have a conflict!
+
+But, after thinking about it some more, I no longer think this sort of versioning is necessary, and I'm skeptical it's the right thing anyway. There are several reasons.
+
+First, I no longer feel it's _necessary._ This is sort of a subtle point. In our current workflows, when code edits are shared asynchronously, with sometimes hours or days passing between merges, having more changes merge cleanly is a win. But, if we can share our changes more frequently, even in real-time, we don't care as much about clean merges. 'Conflicts' are detected much much earlier, and when they happen they are entirely a consequence of bad communication---people literally working on upgrading the same nodes in the dependency graph.
+
+What is important is getting rid of completely silly conflicts caused by the incidental structure of text files. It is obviously dumb to have conflicts due to things like reordering imports, reordering the function definitions in a module, moving a function from one module to another, or _formatting of the code_. But once we get rid of all that stuff, as Unison does, the 'conflicts' that remain are solely those due to one person modifying a function in one way, and one person modifying that identical function in a different way. Can we do even better and somehow merge more of their changes? Maybe... but I don't think it's necessary.
+
+Now I'll go a little further. Not only do I think it's unnecessary and overly complex, I also think it's _not the right thing_. My argument is based on the observation that any sufficiently expressive, usable edit calculus will allow for multiple paths from _a_ to _b_. Let us suppose that Alice and Bob both start with a term having hash _h_. Alice makes a series of semantic edits, eventually producing the term _h2_. Meanwhile, Bob takes a different path, makes his own series of edits, but eventually arrives at the same hash _h2_. (Say Alice and Bob are both implementing mergesort, and arrive at the same implementation, though they build up the implementation differently.) Clearly, merging should produce no conflicts. Who cares if Alice and Bob took different paths if they ended up with the same thing?
+
+But, we actually need more than no conflicts, we also need the result of the merge to be _h2_. That is, though the paths were different, we need to be assured that merging the paths doesn't introduce any extra stuff. A good example is if at different points in their edit sequences, Alice 'adds a parameter' and Bob 'adds a parameter'. By the time we get to the end result of the edit sequence, it is clear (to us, anyway) that the parameter added at that point was logically the same for both Alice and Bob. But we need to be sure that the end result is not a function with _both_ parameters, since that is basically garbage. This is actually a very strong constraint.
+
+More generally, it's not enough to have diffs that commute, we also need to be assured that when commuting diffs, the result introduces no artifacts, where an 'artifact' is something we wouldn't get if we just applied the diffs sequentially to a starting point. This issue is analogous to artifacts we see with line-based VCS merges, where Alice could modify the first 5 lines of a function, Bob could modify the last five lines, and these changes can be merged without conflicts. Insanity! We have an unreliable merge function that injects bugs and garbage into our program, such that we always have to inspect the output, rebuild the code, run the tests, etc, just to make sure it didn't do anything silly. _Unless you have a guarantee you're doing what the user wants, don't do anything at all._
+
+I won't rule out the possibility that there is a semantic `Diff` implementation with both these properties, but it does not seem likely to me.
+
+Another more practical reason not to do semantic diffs is that it means the editor is very much coupled to the VCS---we can no longer use an arbitrary editor, we need one that records the sequence of edit actions, and the user must work directly with this set of edit actions. (We could try to guess the edit actions by tree diffing, say, but then we're right back where we started!) In the interest of modularity and flexibility, it's nicer to have the editor act like a black box. Its only job is to produce terms. The UI it chooses to expose and the editing actions it chooses to expose are its business.
+
+So in summary, semantic VCS (beyond the obvious stuff addressed by the design in this post) seems unnecessary, overkill, and either impossible or very hard to do correctly even if we _did_ want it. I am happy to be proven wrong about this, though.
+
+I do think having higher-level semantic edit actions is important, but not for versioning or concurrent editing. It's useful just for building up `Edit` values with less manual work, just like the refactoring support in existing IDEs. It would be nice to be able to talk about actions like: _add a parameter of type `Number` to `foo`, and supply `42` as the argument to `foo` in all these call sites_. And it would be nice to build up a library of semantic editing functions, to help with automating more of the work. But I see this as a separate layer, which ultimately compiles down to a series of operations on `Edit` values.

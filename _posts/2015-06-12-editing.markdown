@@ -216,7 +216,7 @@ Do we still need 'branches'? I am not sure. I think we at least need something l
 
 Now where to go from here? This topic definitely needs more thought. If you have ideas, please leave a comment, or join [the chat room](https://gitter.im/unisonweb/platform).
 
-### Is semantic version control even a good idea?
+### <a id="semantic-vcs"></a> Is semantic version control even a good idea?
 
 I've been really interested in the idea of semantic version control for a while, in which the unit of edits is not text diffs or even tree diffs, but _semantic edits_ that map more directly to programmer intent. So, an edit might be 'swap the order of these two function parameters' or 'rename this function parameter from x to x2'.
 
@@ -234,9 +234,9 @@ foo'' x1 y = ...
 
 At the level of a text diff, we have a conflict on the first line. And at the level of a tree diff, we _also_ have a conflict!
 
-But, after thinking about it some more, I no longer think this sort of versioning is necessary, and I'm skeptical it's the right thing anyway. There are several reasons.
+But, after thinking about it some more, I no longer think this sort of versioning is necessary, and I'm skeptical it's the right thing anyway.
 
-First, I no longer feel it's _necessary._ This is sort of a subtle point. In our current workflows, when code edits are shared asynchronously, with sometimes hours or days passing between merges, having more changes merge cleanly is a win. But, if we can share our changes more frequently, even in real-time, we don't care as much about clean merges. 'Conflicts' are detected much much earlier, and when they happen they are entirely a consequence of bad communication---people literally working on upgrading the same nodes in the dependency graph.
+First, why is it not _necessary?_ This is sort of a subtle point. In our current workflows, when out of necessity code edits are shared asynchronously, with sometimes hours or days passing between merges, having more changes merge cleanly is a win. But, if we can now share our changes more frequently, even in real-time, without ever breaking others' work, we don't care as much about clean merges. 'Conflicts' are detected much much earlier, and when they happen they are typically a consequence of bad communication---people literally working on upgrading the same nodes in the dependency graph.
 
 What is important is getting rid of completely silly conflicts caused by the incidental structure of text files. It is obviously dumb to have conflicts due to things like reordering imports, reordering the function definitions in a module, moving a function from one module to another, or _formatting of the code_. But once we get rid of all that stuff, as Unison does, the 'conflicts' that remain are solely those due to one person modifying a function in one way, and one person modifying that identical function in a different way. Can we do even better and somehow merge more of their changes? Maybe... but I don't think it's necessary.
 
@@ -250,6 +250,6 @@ I won't rule out the possibility that there is a semantic `Diff` implementation 
 
 Another more practical reason not to do semantic diffs is that it means the editor is very much coupled to the VCS---we can no longer use an arbitrary editor, we need one that records the sequence of edit actions, and the user must work directly with this set of edit actions. (We could try to guess the edit actions by tree diffing, say, but then we're right back where we started!) In the interest of modularity and flexibility, it's nicer to have the editor act like a black box. Its only job is to produce terms. The UI it chooses to expose and the editing actions it chooses to expose are its business.
 
-So in summary, semantic VCS (beyond the obvious stuff addressed by the design in this post) seems unnecessary, overkill, and either impossible or very hard to do correctly even if we _did_ want it. I am happy to be proven wrong about this, though.
+So in summary, semantic VCS (beyond the obvious stuff addressed by the design in this post) seems unnecessary, overkill, and either impossible or very hard to do correctly even if we _did_ want it. I am happy to be proven wrong about this, though!
 
-I do think having higher-level semantic edit actions is important, but not for versioning or concurrent editing. It's useful just for building up `Edit` values with less manual work, just like the refactoring support in existing IDEs. It would be nice to be able to talk about actions like: _add a parameter of type `Number` to `foo`, and supply `42` as the argument to `foo` in all these call sites_. And it would be nice to build up a library of semantic editing functions, to help with automating more of the work. But I see this as a separate layer, which ultimately compiles down to a series of operations on `Edit` values.
+I do think having higher-level semantic edit actions is important, but not for versioning or facilitating concurrent editing. It's useful just for building up `Edit` values with less manual work, just like the refactoring support in existing IDEs. It would be nice to be able to talk about actions like: _add a parameter of type `Number` to `foo`, and supply `42` as the argument to `foo` in all these call sites_. And it would be nice to build up a library of semantic editing functions, to help with automating more of the work. But I see this as a separate layer, which ultimately compiles down to a series of operations on `Edit` values.

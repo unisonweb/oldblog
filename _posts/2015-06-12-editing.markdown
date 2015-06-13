@@ -88,19 +88,19 @@ Now that we have the key idea, we need a data type and some functions to handle 
 ```Haskell
 data Edit h =
   Edit { closed :: Map h (Set h)
-       , opened :: Map (h,h) (Set h) }
+       , opened :: Map (h,h) (Map h (Set h)) }
 ```
 
 The `h` parameter is meant to be suggestive of 'hash', but we're actually parametric in the thing being edited and will assume as little about it as possible.
 
-An `Edit` has two parts, a 'closed' portion, and an 'opened' portion. The closed portion is a mapping from old hash to new hash(es). This is the completed portion of the edit, and the values in `closed` can be added incrementally to the code store (or not) where they are available to anyone. The 'scope' we talked about earlier is just the keys of `opened`:
+An `Edit` has two parts, a 'closed' portion, and an 'opened' portion. The closed portion is a mapping from old hash to new hash(es). This is the completed portion of the edit, and the values in `closed` can be added incrementally to the code store (or not) where they are available to anyone. The 'scope' we talked about earlier is just the keys of `closed`:
 
 ```Haskell
 scope :: Edit h -> Set h
 scope = Map.keysSet . closed
 ```
 
-Each hash in `closed` maps not to one hash but a `Set` of them. Why is that? Well, generally the `Set` will have a single element, but when merging two `Edit` values, we may have disagreement about how to upgrade a particular hash. You might call this a 'conflict', but it's not really. If a key in `opened` has multiple values, the `Edit` is merely specifying that a hash has more than one possible future. Of course, we can decide at any point later that we're actually only interested in one of these possible futures, but that's not the concern of the `Edit` data type, just an operation we can perform on an `Edit`:
+Each hash in `closed` maps not to one hash but a `Set` of them. Why is that? Well, generally the `Set` will have a single element, but when merging two `Edit` values, we may have disagreement about how to upgrade a particular hash. You might call this a 'conflict', but it's not really. If a key in `closed` has multiple values, the `Edit` is merely specifying that a hash has more than one possible future. Of course, we can decide at any point later that we're actually only interested in one of these possible futures, but that's not the concern of the `Edit` data type, just an operation we can perform on an `Edit`:
 
 ```Haskell
 resolve :: Ord h => (Set h -> h) -> h -> Edit h -> Edit h
@@ -149,7 +149,7 @@ We've broken the dependency of `wrangleUser` on `wrangle` just by adding an argu
 
 When an open term like `wrangle'` has no further dependents to update, we can close it, adding its mapping to the `closed` part of the `Edit`. But notice that we get to choose what dependents to update. Perhaps we want to edit `wrangle`, but realize we don't care about updating `wrangleUser`. That is perfectly fine! There is no need to do a "complete codebase upgrade" if we don't want.
 
-Now we can understand the `Map (h,h) (Set h)` used to represent the `opened` portion of the `Edit`. In our example, there would be an entry `((wrangle, wrangle'), {wrangleUser'})`. It is keyed by the `(old,new)` hash for the term that is open, and the `Set h` is any immediate dependents. Interacting with the edit just modifies this `opened` portion in predictable ways.
+Now we can understand the `Map (h,h) (Map h (Set h))` used to represent the `opened` portion of the `Edit`. In our example, there would be an entry `((wrangle, wrangle'), { wrangleUser : {wrangleUser'}}`. It is keyed by the `(old,new)` hash for the term that is open, and the `Map h (Set h)` is any immediate dependents and any in-progress updates to those dependents. Interacting with the edit just modifies this `opened` portion in predictable ways.
 
 The `Edit` data type has no opinion on what sort of UX to expose for all this. But I'll mention a couple ideas:
 
@@ -166,16 +166,20 @@ instance Ord h => Monoid (Edit h) where
   mempty = Edit Map.empty Map.empty
   mappend (Edit c1 o1) (Edit c2 o2) = Edit c o
     where
-    keep c (h,h2) = maybe True (Set.notMember h2) (Map.lookup h c)
     c = Map.unionWith Set.union c1 c2
-    o = Map.unionWith Set.union o1' o2'
+    o = Map.unionWith (Map.unionWith Set.union) o1' o2'
     -- subtract from `o2` any entries closed by `c1`
     -- and subtract from `o1` any entries closed by `c2`
-    o2' = Map.filterWithKey (\e _ -> keep c1 e) o2
-    o1' = Map.filterWithKey (\e _ -> keep c2 e) o1
+    keep c (h,h2) = maybe True (Set.notMember h2) (Map.lookup h c)
+    strip c (root, deps) =
+      let deps' = Map.filterWithKey (\h _ -> Map.notMember h c) deps
+      in if Map.null deps' && not (keep c root) then []
+         else [(root, deps')]
+    o1' = Map.fromList $ Map.toList o1 >>= strip c2
+    o2' = Map.fromList $ Map.toList o2 >>= strip c1
 ```
 
-This is important. We have a _commutative merge function_ for our `Edit` type. The implementation merges corresponding keys in `closed`. And any `opened` values that are closed by the other side of the edit are closed. Any values open in both remain opened. Thus if someone else completes an edit you get their work, unless you've taken the root term in a different direction in which case it is preserved.
+This is important. We have a _commutative merge function_ for our `Edit` type. The implementation merges corresponding keys in `closed`. And any `opened` values that are closed by the other side of the edit are closed. Any values open in both remain opened. Thus, if someone else completes an edit you get their work, but work in progress is preserved.
 
 With a commutative merge function, we can have multiple people work concurrently on the same `Edit`, merging their results in real-time if we want. Of course, nothing stops you from sharing work asynchronously either.
 

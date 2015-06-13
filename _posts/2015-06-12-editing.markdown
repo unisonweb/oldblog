@@ -91,7 +91,7 @@ data Edit h =
        , opened :: Map (h,h) (Map h (Set h)) }
 ```
 
-The `h` parameter is meant to be suggestive of 'hash', but we're actually parametric in the thing being edited and will assume as little about it as possible. (_Update:_ The representation of `opened` was tweaked slightly. [Older verion here](https://gist.github.com/pchiusano/e429df1827504ae50de3/0350fdd7fd9362a7368df2385bf2f54d26f1e2a8) for the curious.)
+The `h` parameter is meant to be suggestive of 'hash', but we're actually parametric in the thing being edited and will assume as little about it as possible. (_Update:_ representation of `opened` was tweaked slightly. [Older verion here](https://gist.github.com/pchiusano/e429df1827504ae50de3/0350fdd7fd9362a7368df2385bf2f54d26f1e2a8) for the curious.)
 
 An `Edit` has two parts, a 'closed' portion, and an 'opened' portion. The closed portion is a mapping from old hash to new hash(es). This is the completed portion of the edit, and the values in `closed` can be added incrementally to the code store (or not) where they are available to anyone. The 'scope' we talked about earlier is just the keys of `closed`:
 

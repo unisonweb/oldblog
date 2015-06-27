@@ -1,0 +1,22 @@
+---
+layout: post
+categories: [updates]
+title: Recent progress
+post_author: Paul Chiusano
+---
+
+I've been pretty absorbed with client work the past couple weeks and don't have too much to share regarding Unison. And I'll be away on vacation next week. I'll plan on doing a post two weeks from today and should have more to share then. Here's what I do have right now:
+
+A bit of Unison editor progress---I'm very slowly getting going with Reflex and GHCJS-DOM. Thanks to the helpful folks in `#reflex-frp` for answering my questions. The Unison editor has some unique needs that aren't directly supported by Reflex out of the box, so I need to do some yak-shaving before I really get cranking. Will write more about this later. Some of the problems are pretty general and the solutions may be of general interest. 
+
+Somewhat related, there was [a recent ICFP paper with a new formulation of FRP](http://www.reddit.com/r/haskell/comments/3ai7hl/principled_practical_frp_forget_the_past_change/). The result of their work is a simple, Haskell 98 library (no fancy types) which claims to largely eliminate the possibility of space leaks while retaining first-class events and behaviors. Any FRP experts care to weigh in? I have only read through the paper briefly.
+
+I haven't gotten a chance to do writeups of any projects for contributors yet, but would like to do that soon and already have a bunch of ideas.
+
+Lastly, here are a couple things on my mind: 
+
+* I've been ruminating a bit on whether it makes any sense to extend the [well-typed editing story](/2015-06-12/editing.html) to _well-typed hotswapping_. My vague initial thought: pause the running computation, and given an edit that 'covers' all the dependencies of the paused computation, swap out all the hashes and resume. Even if this can make sense, is it a good idea? Needs a lot more thought and a survey of research. If you have any ideas or references, please leave a comment or [join us in the Gitter chat room](https://gitter.im/unisonweb/platform).
+* In talking to various people about the well-typed editing design, it's become even more apparent: with this editing model, it is just hard to imagine what programmer workflows will look like exactly. I view this as a UX problem more than a technical one, but it definitely still needs fleshing out!
+* A somewhat narrow technical observation---the usual prettyprinting combinator library can be generalized to work with stuff other than text, and can also be written in a way that allows us to resolve locations in the rendered output back to paths in the original tree. I'm going to fiddle with a library like this, since I believe it will greatly simplify parts of the Unison editor.
+
+That's all for now.

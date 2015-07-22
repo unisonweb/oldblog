@@ -1,0 +1,15 @@
+---
+layout: post
+categories: [updates]
+title: A combinator library for responsive layout, and rich function layouts
+---
+
+Here's a quick summary of recent updates:
+
+* There is a [distributed evaluation branch](https://github.com/unisonweb/platform/tree/topic/distributed-evaluation) that [Josh Cough](https://github.com/joshcough) and I started working on. It's the start of an implementation of the [design I wrote up a while ago](http://unisonweb.org/2015-06-02/distributed-evaluation.html#post-start). I've created [an issue to track the progress](https://github.com/unisonweb/platform/issues/22).
+* I've implemented a [small library that will serve as a building block for the Unison editor][1]. The editor needs to be able to render code and embedded graphics with a responsive layout that adjusts to available width. I had solved this problem in a pretty ad hoc way in the old editor, but it got ugly and I wanted something much better. The [new library][1] separates out just the concern of building responsive layouts that can be rendered at different widths (with a few twists on the usual prettyprinting combinators), and is totally general purpose. Here's a usage of it, [the prettyprinter for types](https://github.com/unisonweb/platform/blob/master/shared/src/Unison/Type.hs#L182). That same description can be rendered at multiple widths, and sent to plain text or HTML! But the output isn't just an opaque blob---we retain information needed to resolve screen locations to paths into our original syntax tree. This makes adding editability really easy.
+* I figured out a nice story for doing _rich function layout_, so for example division can be rendered with a horizontal bar, but that's really just scratching the surface of what will be a very powerful idea. I'd like to do a [design writeup](/design) of this soon. A lot of this was sparked by conversations with [@int-index](https://github.com/int-index) who is working on a [language-agnostic semantic editor called Source](https://github.com/int-index/source) and is interested in adding mixfix operators to Unison. I realized the idea could be generalized much much further.
+
+That's all for now.
+
+[1]: https://github.com/unisonweb/platform/blob/master/shared/src/Unison/Doc.hs

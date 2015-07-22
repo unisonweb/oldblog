@@ -2,6 +2,7 @@
 layout: post
 categories: [updates]
 title: A combinator library for responsive layout, and rich function layouts
+post_author: Paul Chiusano
 ---
 
 Here's a quick summary of recent updates:

@@ -1,0 +1,132 @@
+---
+layout: post
+categories: [musings, updates]
+title: Richer rendering of function application
+post_author: Paul Chiusano
+---
+
+A couple quick updates:
+
+* If you'd like to help contribute to Unison development, I wrote up some project ideas---see tickets [#25](https://github.com/unisonweb/platform/issues/25) and [#24](https://github.com/unisonweb/platform/issues/25). These don't require a ton of background and they aren't critical path, but they definitely _will_ become super useful. I have some other ideas for projects that I'll get around to writing up at some point.
+* Josh Cough and I got a round trip working with the [distributed-evaluation branch](https://github.com/unisonweb/platform/blob/topic/distributed-evaluation/node/src/Unison/Runtime/Remoting.hs). The code is not too exciting and there is still a lot to do, but progress continues. We still have to implement the Unison node _client_. We only get together about once a week or so to hack on this, so progress has been a little slow.
+* I've been working on some machinery that will be used by the Unison editor. I don't have a demo to show, but the technology behind the scenes is really cool so I wanted to write about it. More on that in the rest of this post.
+
+Suppose I've written a function:
+
+```Haskell
+wrangle :: Text -> Age -> Text
+wrangle name age = ...
+```
+
+The implementation of `wrangle` exists apart from that name. The `wrangle name age = ...` is actually doing two things:
+
+* It is associating the symbol `wrangle` with a function we've defined.
+* It is specifying _how function application should be rendered_ when our function is applied to some arguments. Based on the above definition, we would use the syntax `wrangle "Bob" 42` to apply the function to two arguments.
+
+As programmers, we have very little control over how function application is rendered (and/or parsed, if you are using a text editor). Your options:
+
+* You can specify that function application is prefix, as above.
+* You can specify that function application is _infix_, in which case some symbol is written between the first two arguments of the function. We call this an "operator" (for some reason).
+* Some other ad hoc options (perhaps postfix operators).
+* Languages like Agda support _mixfix_ operators, which let you define a format string indicating where arguments are to be plugged in at application sites. So the symbol definition `if_then_else_` can be applied using the syntax `if True then 42 else 43`.
+
+These constraints on layout are completely artificial, but we still keep using them in our programming environments. Agda's mixfix symbols might seem quite expressive, but why should we be _excited_ that we get to describe layout of function application using bad ascii (or unicode!) art? There's a whole world of possibilites for how function application can be rendered. For instance:
+
+* Division might be rendered with the numerator above the denominator, separated by a horizontal bar.
+* Mathematicians have a hodgepodge of different notations for applying particular functions (like summation, integration, etc). Wouldn't it be nice to at least have the _option_ of using these notations in our programming environments?
+* A great many UIs are just some formatting around some function application. Why build a completely separate UI layer for this when we just want to customize how the function application is displayed?
+
+As an example of this third point, take Google's [mortgage calculator](https://encrypted.google.com/search?hl=en&q=mortgage%20calculator). We have the following:
+
+```Haskell
+mortgageCalculator : Amount -> InterestRate -> Period -> (Amount,Amount)
+mortgageCalculator total rate period = ...
+```
+
+The widget is just a little spreadsheet. The top cell is a rendering of the expression `mortgageCalculator 100k 3.92% 30yrs`, whose arguments the user can edit, and the bottom cell is the computed result of that expression. There's a lot of formatting around this to make it look nice and make its use more self-explanatory, but this is "just" window dressing.
+
+_Aside:_ Also see [this earlier post on viewing a program as a UI](https://pchiusano.github.io/2014-11-13/program-as-ui.html).
+
+### Document formatted operators (DFOs)
+
+When you define a function, you should have _arbitrary_ control over how function application is rendered for your definition. You should not have to pick from a fixed menu of layouts, nor should you have to approximate your desired layout via ascii or unicode art.
+
+In Unison, when you give a definition, you can associate an arbitrary _document with blanks in it_, one blank for each argument that is to be captured. Here are the main types:
+
+```Haskell
+newtype Precedence = Precedence Int deriving (Eq,Ord)
+newtype Var = Arg Int deriving (Eq,Ord)
+data Segment = Slot Var Precedence | Text Text
+
+data DFO = DFO (Doc Segment (Maybe Var)) Precedence
+```
+
+Where [Doc is an annotated layout description that can be rendered at various widths](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Doc.hs). Here's a definition of postfix operators:
+
+```
+hugPostfix1 :: Precedence -> DFO
+hugPostfix1 prec = DFO (D.docs [arg1 prec, name]) prec
+
+arg1 :: Precedence -> Doc Segment (Maybe Var)
+arg1 p = toDoc $ Slot (Arg 1) p
+
+name :: Doc Segment (Maybe Var)
+name = toDoc $ Slot (Arg 0) high
+
+percent :: Symbol DFO
+percent = Symbol.annotate hugPostfix1 (Symbol.named "%")
+```
+
+With this in place, we can use `percent` for a function definition's symbol, and when applied to an argument `x` in the editor, it will be rendered as `x%`. Nice!
+
+There are a couple things happening here in the above:
+
+* In the `layout` definition, we can reference the name of the operator (the `name` reference), which tells the renderer to insert the name of the symbol. Names are still used both for convenience (it's nice to be able to search by name, and communicate with other programmers using names) and if the function is not fully saturated.
+* We also specify where to splice in the argument(s) (the `arg1` call). For each such argument, we indicate _what the ambient precedence should be in that context_. This will be used by the renderer to control where parentheses are needed. For left-associative operators, we don't want to show parens for a left associated chain like `((a + b) + c) + d`, so we only increase ambient precedence when descending into the _right_ subtree. The renderer takes care of inserting parens if the amient precedence exceeds the precedence of the current operator being rendered.
+
+Here's a function for building infix operators:
+
+```
+binary :: Associativity -> Precedence -> DFO
+binary assoc prec =
+  DFO layout prec
+  where
+  deltaL p | assoc == AssociateL || assoc == Associative = p
+  deltaL p = increase p
+  deltaR p | assoc == AssociateR || assoc == Associative = p
+  deltaR p = increase p
+  layout = D.docs
+    [ arg1 (deltaL prec), D.breakable " ", name, text " "
+    , arg2 (deltaR prec) ]
+```
+
+There are a couple interesting things happening here:
+
+* We also get to insert arbitrary text anywhere we want in the layout (here, we just use this to add spacing), and the basic idea can be easily extended to other rendering targets with more capabilities. Why not embed some graphics and pretty colors while we're at it?
+* Like a prettyprinting library, the `Doc` type specifies a responsive layout that can be displayed at different widths. Our infix operators will be rendered as either:
+
+``` Haskell
+a + b
+
+OR
+
+a
++ b
+```
+
+The overall layout function also handles chains of operators, so that `a + b + c + d` renders either all on one line, or as:
+
+```
+a
++ b
++ c
++ d
+```
+
+... if it doesn't fit.
+
+This sounds complicated, but the main layout function is actually [only about 50 lines of code](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Type.hs#L199) to prettyprint arbitrary Unison types using DFOs. The `view` function is it's just producing a description, which can [easily be interpreted to various targets](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Doc.hs#L252) like plain text or the DOM.
+
+I haven't implemented the term viewing function but I expect it will be similar in complexity.
+
+I hope to have a demo of all this running in the browser very soon!

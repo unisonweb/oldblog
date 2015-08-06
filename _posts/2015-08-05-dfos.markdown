@@ -30,7 +30,7 @@ As programmers, we have very little control over how function application is ren
 * Some other ad hoc options (perhaps postfix operators).
 * Languages like Agda support _mixfix_ operators, which let you define a format string indicating where arguments are to be plugged in at application sites. So the symbol definition `if_then_else_` can be applied using the syntax `if True then 42 else 43`.
 
-These constraints on layout are completely artificial, but we still keep using them in our programming environments. Agda's mixfix symbols might seem quite expressive, but why should we be _excited_ that we get to describe layout of function application using bad ascii (or unicode!) art? There's a whole world of possibilites for how function application can be rendered. For instance:
+These constraints on layout are completely artificial, but we still keep using them in our programming environments. Agda's mixfix symbols might seem quite expressive, but why should we be _excited_ that we get to describe layout of function application using bad ascii (or unicode!) art? There's a whole world of possibilities for how function application can be rendered. For instance:
 
 * Division might be rendered with the numerator above the denominator, separated by a horizontal bar.
 * Mathematicians have a hodgepodge of different notations for applying particular functions (like summation, integration, etc). Wouldn't it be nice to at least have the _option_ of using these notations in our programming environments?

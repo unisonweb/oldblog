@@ -1,0 +1,13 @@
+---
+layout: default
+---
+
+<h1 class="center">Posts tagged 'musings'</h1><br/>
+
+<p align="center">[ <i><a href="/feed.musings.xml">RSS</a></i> ]</p>
+
+<ul>
+{% for post in site.categories.musings %}
+<li><a href="{{ post.url }}">{{ post.title }}</a></li>
+{% endfor %}
+</ul>

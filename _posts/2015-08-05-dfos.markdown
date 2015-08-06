@@ -82,7 +82,7 @@ With this in place, we can use `percent` for a function definition's symbol, and
 There are a couple things happening here in the above:
 
 * In the `layout` definition, we can reference the name of the operator (the `name` reference), which tells the renderer to insert the name of the symbol. Names are still used both for convenience (it's nice to be able to search by name, and communicate with other programmers using names) and if the function is not fully saturated.
-* We also specify where to splice in the argument(s) (the `arg1` call). For each such argument, we indicate _what the ambient precedence should be in that context_. This will be used by the renderer to control where parentheses are needed. For left-associative operators, we don't want to show parens for a left associated chain like `((a + b) + c) + d`, so we only increase ambient precedence when descending into the _right_ subtree. The renderer takes care of inserting parens if the amient precedence exceeds the precedence of the current operator being rendered.
+* We also specify where to splice in the argument(s) (the `arg1` call). For each such argument, we indicate _what the ambient precedence should be in that context_. This will be used by the renderer to control where parentheses are needed. For left-associative operators, we don't want to show parens for a left associated chain like `((a + b) + c) + d`, so we only increase ambient precedence when descending into the _right_ subtree. The renderer takes care of inserting parens if the ambient precedence exceeds the precedence of the current operator being rendered.
 
 Here's a function for building infix operators:
 
@@ -125,7 +125,7 @@ a
 
 ... if it doesn't fit.
 
-This sounds complicated, but the main layout function is actually [only about 50 lines of code](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Type.hs#L199) to prettyprint arbitrary Unison types using DFOs. The `view` function is it's just producing a description, which can [easily be interpreted to various targets](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Doc.hs#L252) like plain text or the DOM.
+This sounds complicated, but the main layout function is actually [only about 50 lines of code](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Type.hs#L199) to prettyprint arbitrary Unison types using DFOs. The `view` function just produces a description, which can [easily be interpreted to various targets](https://github.com/unisonweb/platform/blob/topic/views/shared/src/Unison/Doc.hs#L252) like plain text or the DOM.
 
 I haven't implemented the term viewing function but I expect it will be similar in complexity.
 

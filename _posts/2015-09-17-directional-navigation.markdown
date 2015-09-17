@@ -25,15 +25,15 @@ Something that is nice about this mode of traversal is that it is based on the _
 
 The expression `x + y` is actually represented as the Unison term `App (App + x) y`. But if we're at `x`, it feels nicer to me if moving right puts us at `+`. While `y` is the next leaf in a traversal of the term tree, the leaf immediately to the right _geometrically_ is `+`. 
 
-Navigation controls:
+I've been thinking more about navigation controls. Here's what I'm thinking:
 
-* Up, Down, Left, Right: Move to the leaf above, below, to the left, or to the right. These move the selection geometrically, based on how the term is laid out, not based on the term's tree structure. Possible keybindings: the arrow keys and/or `hjkl`.
+* Up, Down, Left, Right: Move to the leaf above, below, to the left, or to the right, as shown above. These move the selection geometrically, based on how the term is laid out, not based on the term's tree structure. Possible keybindings: the arrow keys and/or `hjkl`.
 * Leftmost, Rightmost: Move to the leaf furthest to the left or right. Also move geometrically. Possible keybindings: `<shift>+<left>` and `<shift>+<right>`.
 * Expand, Contract: Expand moves the selection to the parent. Contract moves the selection to the leftmost child (geometrically). Possible keybindings: `<shift>+<up>` and `<shift>+<down>`.
 
-It should be obvious that you can navigate anywhere in the document using these controls, and it can be quite efficient, too. Of course, you can also use the mouse if you want.
+It should be obvious that you can navigate anywhere in the document using these controls, and it can be quite efficient, too. Of course, you can also use the mouse if you want. I think it's important to have a simple, small set of powerful controls, so it's easy to commit them to muscle memory. Even as a Vim user, I probably only use about 15% of Vim's navigation actions. I'm sure there are more efficient ways of getting from point A to point B in the document, but when I'm navigating, brain cycles (not having to think) are more important to me than saving keystrokes. There's also a large learning curve when using an editor with a huge number of ways to navigate around and make edits. I'd rather improve the editor so there's less for the user to specify than force the user to learn a richer navigation language to optimize how they specify information in a editor without semantic awareness.
 
-Semantic editing can be much better for accessibility than plain text editing, because there is less information to specify. With a text editor, we have to disambiguate which characters in a buffer the user is referring to without any information about what these characters mean. Selections that don't even correspond to a parseable fragment (like `1,2) xyz; bar }}`) are still allowed and the editor forces us to disambiguate whether we intended one of these nonsense selections. If you're physically able to use a full keyboard and mouse, this extra specification of information doesn't take much additional time so you may not notice it, but if you were unable to use a mouse, it becomes much more apparent.
+Somewhat related to this, semantic editing can be much better for accessibility than plain text editing, because there is less information to specify. With a text editor, we have to disambiguate which characters in a buffer the user is referring to without any information about what these characters mean. Selections that don't even correspond to a parseable fragment (like `1,2) xyz; bar }}`) are still allowed and the editor forces us to disambiguate whether we intended one of these nonsense selections. If you're physically able to use a full keyboard and mouse, this extra specification of information doesn't take much additional time so you may not notice it, but if you were unable to use a mouse, it becomes much more apparent.
 
 Here are a couple other use cases:
 

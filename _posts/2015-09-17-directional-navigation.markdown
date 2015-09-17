@@ -7,17 +7,17 @@ post_author: Paul Chiusano
 
 I have a few videos to demo the navigation control I'm adding to the editor. First, let's look at this old video:
 
-<iframe src="https://player.vimeo.com/video/136965195" width="500" height="387" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> <p><a href="https://vimeo.com/136965195">Progress on new Unison editor, showing layout and path resolution</a> from <a href="https://vimeo.com/user37722330">Paul Chiusano</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+<iframe src="https://player.vimeo.com/video/136965195" width="500" height="387" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 This shows layout of a Unison term, and you can see mouse positions being resolved to paths into the underlying term. All this is done with just a single mouse listener, using the [annotated layout tree tech I've discussed previously](https://github.com/unisonweb/platform/blob/master/shared/src/Unison/Doc.hs).
 
 Next up, I worked on adding highlighting of the current selected path and allowing keyboard navigation. Here was my first attempt. Not very nice. In this video, I press the right arrow several times, then the left several times. Notice how the selection jumps around and doesn't feel very natural:
 
-<iframe src="https://player.vimeo.com/video/139499010" width="500" height="328" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> <p><a href="https://vimeo.com/139499010">Unison editor navigation control v1</a> from <a href="https://vimeo.com/user37722330">Paul Chiusano</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+<iframe src="https://player.vimeo.com/video/139499010" width="500" height="328" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 On the one hand, it's easy to explain what's happening---pressing the right arrow moves the selection to the leaf whose left edge is closest (in terms of horizontal distance) to the starting selection region. But it's a bit jarring to not penalize shifting the selection along the opposite axis of the requested movement. When we press 'right', we don't expect the selection to move _down_ just because an element below happens to have a left edge that's a bit closer. I played with various functions for ordering possible destination regions, but it felt like playing whack-a-mole. One type of navigation would start to feel nicer while another case then behaved strangely. After fiddling with this for way too long, I decided to take a step back and try a different approach. In retrospect seems obvious. Here's the result:
 
-<iframe src="https://player.vimeo.com/video/139606000" width="500" height="343" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> <p><a href="https://vimeo.com/139606000">Unison editor navigation control v2</a> from <a href="https://vimeo.com/user37722330">Paul Chiusano</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+<iframe src="https://player.vimeo.com/video/139606000" width="500" height="343" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 In this video, I press: down, down, down, right, up, up, right, right, right, right, left, left, left, left. I'd say the results are as expected. Whereas the previous algorithm just received the _set_ of leaf regions in the whole layout, the new algorithm directly traverses the annotated layout tree (ALT) data structure used behind the scenes. This is a much better approach.
 

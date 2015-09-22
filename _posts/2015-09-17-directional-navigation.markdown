@@ -31,9 +31,13 @@ I've been thinking more about navigation controls. Here's what I'm thinking:
 * Leftmost, Rightmost: Move to the leaf furthest to the left or right. Also move geometrically. Possible keybindings: `<shift>+<left>` and `<shift>+<right>`.
 * Expand, Contract: Expand moves the selection to the parent. Contract moves the selection to the leftmost child (geometrically). Possible keybindings: `<shift>+<up>` and `<shift>+<down>`.
 
+__Update:__ I've implemented these controls. Here's a demo:
+
+<iframe src="https://player.vimeo.com/video/140069090" width="500" height="537" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
 It should be obvious that you can navigate anywhere in the document using these controls, and it can be quite efficient, too. Of course, you can also use the mouse if you want. I think it's important to have a simple, small set of powerful controls, so it's easy to commit them to muscle memory. Even as a Vim user, I probably only use about 15% of Vim's navigation actions. I'm sure there are more efficient ways of getting from point A to point B in the document, but when I'm navigating, brain cycles (not having to think) are more important to me than saving keystrokes. There's also a large learning curve when using an editor with a huge number of ways to navigate around and make edits. I'd rather improve the editor so there's less for the user to specify than force the user to learn a richer navigation language to optimize how they specify information in a editor without semantic awareness.
 
-Somewhat related to this, semantic editing can be much better for accessibility than plain text editing, because there is less information to specify. With a text editor, we have to disambiguate which characters in a buffer the user is referring to without any information about what these characters mean. Selections that don't even correspond to a parseable fragment (like `1,2) xyz; bar }}`) are still allowed and the editor forces us to disambiguate whether we intended one of these nonsense selections. If you're physically able to use a full keyboard and mouse, this extra specification of information doesn't take much additional time so you may not notice it, but if you were unable to use a mouse, it becomes much more apparent.
+Somewhat related to this, semantic editing can be much better for accessibility than plain text editing, again because there is less information to specify. With a text editor, we have to disambiguate which characters in a buffer the user is referring to without any information about what these characters mean. Selections that don't even correspond to a parseable fragment (like `"1,2) xyz; bar }}"`) are still allowed and the editor forces us to disambiguate whether we intended one of these nonsense selections. If you're physically able to use a full keyboard and mouse, this extra specification of information doesn't take much additional time so you may not notice it, but if you were unable to use a mouse, it becomes much more apparent.
 
 Here are a couple other use cases:
 
@@ -41,7 +45,7 @@ Here are a couple other use cases:
 * Gesture-directed programming: Perhaps in conjunction with voice-direction, hook up a Kinect or similar device, and translate gestures into editing commands. Again, with less info to specify, this becomes much more usable.
 * Really, the editor shouldn't have strong opinions about _how_ editing and navigation actions are triggered. It should allow multiple inputs, with the user free to choose whichever input mode(s) are most convenient for them.
 
-Something else I've been keeping in mind that's related to this is the _programming on a tablet_ use case. With a semantic editor, programming on a tablet becomes a lot more realistic, even for serious programming, because there's so much less to specify.
+Something else I've been keeping in mind that's related to this is the _programming on a tablet_ use case. With a semantic editor, programming on a tablet becomes a lot more realistic, even for serious programming, because there's so much less to specify. Imagine sitting under a shady tree on a warm sunny day with your tablet, doing real programming!
 
 ### Other updates and remarks
 

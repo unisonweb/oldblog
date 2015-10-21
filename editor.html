@@ -1,0 +1,15 @@
+---
+layout: default
+---
+
+<h1 class="center">Posts tagged 'editor'</h1><br/>
+
+<p align="center">[ <i><a href="/feed.editor.xml">RSS</a></i> ]</p>
+
+<p>These posts are related to the Unison editor.</p>
+
+<ul>
+{% for post in site.categories.editor %}
+<li><a href="{{ post.url }}">{{ post.title }}</a></li>
+{% endfor %}
+</ul>

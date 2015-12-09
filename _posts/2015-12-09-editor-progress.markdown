@@ -29,6 +29,6 @@ Lots of things aren't implemented yet:
 
 What is nice though is that the way each of these actions is encoded fits in the same overall scheme, which makes them very easy to implement. You go to the spot you want to edit, bring up the explorer, and valid replacements _and actions_ (like the above) are shown. It's only exposing actions via more ad hoc interactions that takes a bit more work. Of course, the explorer can grow smarter about presenting possible suggestions, but that's "easy".
 
-Something I've noticed is that at this stage, every small additions to the available action set makes a huge difference in perceived fluidity and expressiveness. Just adding the ',' action to the explorer for building up a list literal (or more generally doing any kind of insertion) made the experience feel way more direct and fluid. I'm excited to see how it feels when some of the other actions are hooked up.
+Something I've noticed is that at this stage, every small addition to the available action set makes a huge difference in perceived fluidity and expressiveness. Just adding the `,` keystroke to the explorer for building up a list literal (or more generally doing any kind of insertion) made the experience feel way more direct and fluid. I'm excited to see how it feels when some of the other actions are hooked up.
 
 When I get a few more features implemented and bugs ironed out, I'll post the editor online here on this site, for anyone to try right in the browser!

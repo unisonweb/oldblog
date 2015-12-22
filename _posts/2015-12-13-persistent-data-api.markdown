@@ -64,17 +64,26 @@ intersection : Results a -> Results a -> Results a
 -- etc
 ```
 
-The `Results a` is a pure description of how to fetch a result set of `a` values. These descriptions may then be combined in various ways to build up or refine a query. In the end, we often want to look at some values matching the query. Here's one way to do that, I'll mention some variations in [the appendix](#appendix):
+The `Results a` is a pure description of how to fetch a result set of `a` values. These descriptions may then be combined in various ways to build up or refine a query. In the end, we often want to look at some values matching the query. Here's one way to do that:
 
 ```
-smallest : Number -> Permutation a -> Results a -> Results a
-largest : Number -> Permutation a -> Results a -> Results a
-run : Results a -> Remote! (Set a)
+ascending : Permutation a -> Ordering a
+descending : Permutation a -> Ordering a
+then : Ordering a -> Ordering a -> Ordering a
+
+sort : Ordering a -> Results a -> Stream a
+stream : Results a -> Stream a
+
+take : Number -> Stream a -> Stream a
+map : (a -> b) -> Stream a -> Stream b
+-- etc
+
+run : Stream a -> Remote! (Vector a)
 ```
 
-A `Permutation a` denotes a permutation of the _paths_ into `a`, which generalizes the notion of a column. A simple `Permutation` might be `id : Permutation a` (the identity permutation, rearranges nothing) or a `Permutation (a,b)` (swaps the `_1` path and the `_2` path). A `Permutation` controls the ordering of the result set before limiting to the smallest or largest elements. Thus, we can only order a result set based on information already present, at least when manipulating a `Results` object. (You can order using arbitrary Unison code after the `Results` is converted to a `Stream` or list. See [the appendix](#appendix) for more info on this.)
+A `Permutation a` denotes a permutation of the _paths_ into `a`, which generalizes the notion of a column. A simple `Permutation` might be `id : Permutation a` (the identity permutation, rearranges nothing) or a `Permutation (a,b)` (swaps the `_1` path and the `_2` path). A `Permutation` can then be converted to an `Ordering`, either ascending or descending, and orderings may be chained together using the `then` function. Together these functions let us express arbitrary ways of sorting ("sort by the third element of the tuple, ascending, then the first element descending"), the only constraint is that we must order based on information already present, at least when manipulating a `Results` object. (You can order using arbitrary Unison code after the `Results` is converted to a `Stream` or list. See [the appendix](#appendix) for more info on this.)
 
-See [the appendix](#appendix) for details on how permutations are built up and some possible variations on this design.
+Once you're done manipulating your `Results`, you use `stream` or `sort` to convert to a `Stream`, which can be further manipulated and eventually `run`. See [the appendix](#appendix) for details on how permutations are built up and some possible variations on this design.
 
 Something that might not be obvious is that this API can be used to implement indices or key-value stores. Given a `Data (k,v)`, we can find the value(s) associated with a given key using the pattern `(k,_)`, or we can query in the other direction with the pattern `(_,v)`. In a future post, I'll describe a data structure that can be used to implement the actual store and which can answer all pattern queries efficiently, as well as supporting all the other `Results` operations like `union`, `intersection`, etc. The data structure comes in a few flavors, one of which is adaptive and tunes itself to efficiently run the most common queries while still being reasonably efficient for other queries---this covers the 80% case. But it can also be used in a completely explicit fashion, with the programmer specifying the "query model" which determines exactly how the structure is organized and what pattern queries are most efficiently handled.
 
@@ -117,22 +126,6 @@ _2 : Path (a,b) b
 -- etc
 
 swap _1 _2 : Permutation (a,b)
-```
-
-I'll mention a small variation---the current `Permutation` doesn't have any way to specify that a particular 'column' (path) should be sorted in descending rather than ascending order. We can fix this with another data type, `Ordering a`:
-
-```Haskell
-ascending : Permutation a -> Ordering a
--- Flip the ordering for a path
-invert : Path a b -> Ordering a -> Ordering a
-compose : Ordering a -> Ordering a -> Ordering a
-
--- usage
-limit : Number -> Ordering a -> Results a -> Results a
-
--- Limit the results to the first 10 elements,
--- ordered by `b`, ascending, then `a`, descending
-limit 10 (invert _1 (ascending (swap _1 _2))) : Results (a,b) -> Results (a,b)
 ```
 
 #### Joins

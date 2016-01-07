@@ -9,6 +9,11 @@ color: rgb(204,65,37)
   color:#434343;
 }
 
+.separator {
+  width: 100px;
+  border-radius: 8px;
+}
+
 body {
   padding:10px;
   font:15pt/1.5 'Fira Sans', sans-serif;

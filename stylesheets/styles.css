@@ -11,9 +11,6 @@ color: rgb(204,65,37)
 
 .separator {
   width: 50px;
-  border-width: 2px;
-  border-color: white;
-  border-radius: 8px;
 }
 
 body {

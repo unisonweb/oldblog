@@ -6,13 +6,13 @@ color: rgb(204,65,37)
 */
 
 .dots {
-  color:#434343;
+  color:#434343ff;
 }
 
 body {
   padding:10px;
   font:15pt/1.5 'Fira Sans', sans-serif;
-  color:rgb(20,20,20);
+  color:434343ff;
   background-color:#fff;
   font-weight:300;
   text-align:justify;
@@ -45,7 +45,7 @@ a small {
 h1 a:hover { opacity: 0.9 };
 
 h1, h2, h3, h4, h5, h6 {
-  color:rgb(20,20,20);
+  color:#434343;
   margin:0 0 20px;
   font-family:'Fira Sans', sans-serif;
   font-weight: 500;

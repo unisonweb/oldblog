@@ -114,12 +114,13 @@ img {
 }
 
 header {
-  width:350px;
+  width:450px;
   max-width:100%;
+  color:rgb(20,20,20);
   margin:auto;
   padding-bottom:30px;
   font:15pt/1.5 'Fira Sans', sans-serif;
-  font-weight: 700;
+  font-weight: 300;
 }
 
 strong {

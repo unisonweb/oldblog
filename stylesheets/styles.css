@@ -50,14 +50,14 @@ h1 {
 }
 
 a {
-  color:rgb(204,65,37);
+  color:#EA3556;
   font-weight:400;
   text-decoration:none;
 }
 
 a small {
   font-size:11px;
-  color:rgb(204,65,37);
+  color:#EA3556;
   margin-top:-0.6em;
   display:block;
 }

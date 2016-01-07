@@ -12,7 +12,7 @@
    stroke-miterlimit="10"
    id="svg3401"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="logo1-white.svg"
+   sodipodi:docname="logo1-white-paths.svg"
    width="252.54282"
    height="250.97559"
    style="fill:none;stroke:none;stroke-linecap:square;stroke-miterlimit:10">
@@ -44,8 +44,8 @@
      id="namedview3422"
      showgrid="false"
      inkscape:zoom="1.1317175"
-     inkscape:cx="-58.41939"
-     inkscape:cy="152.77803"
+     inkscape:cx="57.365106"
+     inkscape:cy="102.79334"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="0"
@@ -97,18 +97,34 @@
        inkscape:connector-curvature="0"
        style="fill-rule:nonzero;stroke:#ea3556;stroke-width:8;stroke-linecap:butt;stroke-linejoin:round;stroke-opacity:1" />
   </g>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#434343;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
-     x="40.625576"
-     y="198.32312"
-     id="text3439"
-     sodipodi:linespacing="125%"><tspan
-       sodipodi:role="line"
-       x="40.625576"
-       y="198.32312"
-       id="tspan3443"
-       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1">u n i s o n</tspan></text>
+  <g
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:#434343;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="text3439">
+    <path
+       d="m 62.625576,176.96312 -7.76,0 -1.88,13.32 c -0.88,1.52 -1.88,2.52 -2.68,2.52 -0.68,0 -1.12,-0.36 -0.88,-2.04 l 1.88,-13.8 -7.76,0 -2.16,15.32 c -0.56,4.08 0.88,6.84 5,6.84 2.56,0 4.84,-1.4 6.6,-3.48 l -0.08,2.68 6.76,0 2.96,-21.36 z"
+       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1"
+       id="path4802" />
+    <path
+       d="m 88.252451,176.16312 c -2.72,0 -5.48,1.72 -7.16,4.32 l -0.04,-3.52 -6.76,0 -2.96,21.36 7.76,0 1.6,-11.12 c 1.4,-3 2.52,-4.6 3.48,-4.6 0.52,0 0.88,0.4 0.64,2.08 l -1.92,13.64 7.76,0 2.2,-15.72 c 0.56,-4.08 -1.28,-6.44 -4.6,-6.44 z"
+       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1"
+       id="path4804" />
+    <path
+       d="m 110.5537,165.16312 c -2.52,0 -4.56,1.8 -4.88,4.12 -0.32,2.48 1.24,4.36 3.84,4.36 2.52,0 4.56,-1.8 4.88,-4.12 0.32,-2.48 -1.24,-4.36 -3.84,-4.36 z m 2.28,11.8 -7.76,0 -2.96,21.36 7.76,0 2.96,-21.36 z"
+       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1"
+       id="path4806" />
+    <path
+       d="m 132.3287,176.16312 c -6.12,0 -9.6,3.24 -9.6,7.36 0,3.32 1.84,5.2 5.28,6.44 3.36,1.2 4.04,1.44 4.04,2.36 0,1 -1.08,1.32 -2.36,1.32 -2.44,0 -4.32,-1.04 -5.68,-2.24 l -3.76,3.96 c 1.96,2.24 5.6,3.76 9.44,3.76 7.84,0 10,-4.28 10,-7.76 0,-3.36 -1.92,-5.4 -5.28,-6.52 -3.48,-1.16 -4,-1.36 -4,-2.12 0,-0.64 0.52,-1.08 2,-1.08 1.56,0 3.4,0.56 4.88,1.48 l 3.32,-4.16 c -2,-1.64 -4.96,-2.8 -8.28,-2.8 z"
+       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1"
+       id="path4808" />
+    <path
+       d="m 161.82683,176.16312 c -9.36,0 -12.4,7.36 -12.4,13.72 0,5.8 3.48,9.24 9.36,9.24 9.36,0 12.4,-7.4 12.44,-13.72 0.04,-5.68 -3.48,-9.24 -9.4,-9.24 z m -0.64,5.68 c 1.48,0 2.16,0.88 2.12,3.16 -0.04,2.76 -0.48,8.44 -3.88,8.44 -1.44,0 -2.08,-0.88 -2.08,-3.16 0,-2.76 0.44,-8.44 3.84,-8.44 z"
+       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1"
+       id="path4810" />
+    <path
+       d="m 197.23683,176.16312 c -2.72,0 -5.48,1.72 -7.16,4.32 l -0.04,-3.52 -6.76,0 -2.96,21.36 7.76,0 1.6,-11.12 c 1.4,-3 2.52,-4.6 3.48,-4.6 0.52,0 0.88,0.4 0.64,2.08 l -1.92,13.64 7.76,0 2.2,-15.72 c 0.56,-4.08 -1.28,-6.44 -4.6,-6.44 z"
+       style="font-style:italic;font-variant:normal;font-weight:900;font-stretch:normal;font-family:'Fira Sans';-inkscape-font-specification:'Fira Sans Heavy Italic';fill:#434343;fill-opacity:1"
+       id="path4812" />
+  </g>
   <rect
      style="fill:#ffffff;fill-opacity:1"
      id="rect3355"

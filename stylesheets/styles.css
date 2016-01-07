@@ -42,6 +42,10 @@ a small {
   display:block;
 }
 
+a h1 { color: #434343 };
+
+h1 a:hover { opacity: 0.9 };
+
 h1, h2, h3, h4, h5, h6 {
   color:#434343;
   margin:0 0 20px;

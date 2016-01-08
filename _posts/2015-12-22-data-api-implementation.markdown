@@ -122,6 +122,7 @@ That is, we can either be at a leaf, which may have a result, or we may be at a 
 
 This data structure can support a lot of operations efficiently, by making clever use of the structure. Like some other ways of doing indexing, it effectively keeps the data indexed across multiple dimensions simultaneously.
 
+<a id="z-ordering"></a>
 It's instructive to consider how PCBTs compare to something like [Z-ordering](https://en.wikipedia.org/wiki/Z-order_curve) when being used to store a set of pairs. Here's an example dataset:
 
 ```

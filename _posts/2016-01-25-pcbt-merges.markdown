@@ -44,7 +44,7 @@ What about merging the PCBTs themselves? Let's look at an example data set, cons
 1100011010000
 ```
 
-For each column, from `0` to the length of the maximum bit-vector, we compute the number of 1s, 0s, and neithers (for bit vectors not long enough) in that column. Call this the "summary vector". The summary vector takes up very little space. If there are `N` elements in the PCBT, with a maximum length of `M`, storing the summary vector even naively is only `O(M * log N)` (that is an upper bound; Θ-bound is tighter). We will choose to store the summary vector for each node in our PCBT, which it can be shown increases memory usage by at most a constant factor. (Note for instance that the leaf level summary vector contains the information as the original bit vector, and is within a constant factor in size, so we can just store summary vectors if we wish.)
+For each column, from `0` to the length of the maximum bit-vector, we compute the number of 1s, 0s, and neithers (for bit vectors not long enough) in that column. Call this the "summary vector". The summary vector takes up very little space. If there are `N` elements in the PCBT, with a maximum length of `M`, storing the summary vector even naively is only `O(M * log N)` (that is an upper bound; Θ-bound is tighter). We will choose to store the summary vector for each node in our PCBT, which it can be shown increases memory usage by at most a constant factor. (Note for instance that the leaf level summary vector contains all the information of the original bit vector, and is within a constant factor in size, so we can just store summary vectors if we wish.)
 
 Given a summary vector, the root of the PCBT should be the position with "maximal information". One scoring function is to just multiply entropy by total count (total count is just 0s + 1s + neithers). If all bit vectors have the same length, this is just the position with maximum entropy. If vectors are of different lengths (as in the above example), positions receive a linear weight based on how many vectors even have each position. Thus, a position with exactly 50/50 1s and zeros but only 4 vectors gets a lower score than a position with 55/45 but a thousand vectors.
 
@@ -54,7 +54,7 @@ That's the basic idea. Simple!
 
 Something to be worked out still---there is almost definitely a way to leverage this structure to do the merge operation using more "block copies", rather than having to literally examine every bit of every element on each level of partitioning. Especially in the common case where the PCBTs are "well-aligned" and corresponding nodes examine the same positions in the bit vectors.
 
-Also not worked out yet---we need a file format for this structure that can be built up incrementally but has good locality.
+Also not worked out yet---we need a file format for this structure that can be built up incrementally but has good locality. This is not trivial.
 
 ### Merge schedules
 

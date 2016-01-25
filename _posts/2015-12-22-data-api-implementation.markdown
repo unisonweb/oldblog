@@ -53,6 +53,7 @@ To see the difference, let's go back to lists for a minute. When you do `zip a b
 
 For Unison, let's try exploiting the same principle. We'll define an indexing data structure, the prioritized critical bit tree (others in a similar vein might work too), and ensure that all query operations return a _lazily constructed_ instance of that same data structure. Thus the data starts out indexed efficiently, and all query operations retain indexing structure, but we lazily instantiate these structures to obtain the same sort of fusion we got with lists.
 
+<a id="pcbts"></a>
 ### Prioritized critical bit trees (PCBTs)
 
 Let's take a look at a candidate indexing structure. Consider the following set of strings:

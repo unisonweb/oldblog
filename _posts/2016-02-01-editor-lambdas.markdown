@@ -29,7 +29,7 @@ I spotted a bunch of bugs while working on this. I'd like to get most of those c
 
 ### Update on persistent data API work
 
-I have decided for the time being to put aside work on the full [persistent data API and implementation](/2016-01-25/pcbt-merges.html#post-start). While I think that work is promising and I can't wait to dig in (or find a volunteer interested in helping out!), I don't want to hold up the rest of the project to work on what is basically experimental database tech. Instead, I'd just like to expose a very simple binding to an existing key-value store like [LevelDB](http://leveldb.org/). This will independently useful and will unblock a lot of other use cases, like writing Unison-based 'apps'. I'll write up a Unison API for this in another post.
+I have decided for the time being to put aside work on the full [persistent data API and implementation](/2016-01-25/pcbt-merges.html#post-start). While I think that work is promising and I can't wait to dig in (or find a volunteer interested in helping out!), I don't want to hold up the rest of the project to work on what is basically experimental database tech. Instead, I'd just like to expose a very simple binding to an existing key-value store like [LevelDB](http://leveldb.org/). This will be independently useful and will unblock a lot of other use cases, like writing Unison-based 'apps'. I'll write up a Unison API for this in another post.
 
 For the time being, I'm going to be focused on getting v1 of the editor 'done'. I'll consider it success when I can write some simple program, like mergesort or some Euler problems. Once that is in place, the other libraries can start getting filled in, like the persistent data API, the distributed evaluation API, and so on.
 

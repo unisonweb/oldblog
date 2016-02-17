@@ -5,7 +5,7 @@ title: Initial sketch of the Unison persistent data API
 post_author: Paul Chiusano
 ---
 
-_Also see [part 2](/2015-12-22/data-api-implementation.html) and [part 3](/2016-01-25/pcbt-merges.html)._
+_Also see [part 2](/2015-12-22/data-api-implementation.html) and [part 3](/2016-01-25/pcbt-merges.html)_
 
 I'm taking a break from work on the editor to do a design writeup. This post presents a design for the Unison persistent data API. With this API, users will be able to store _arbitrary_ Unison values, _including functions_, without having to deal with any parsing or serialization logic. Unlike SQL, this API doesn't awkwardly force the user to encode everything as tuples or named tuples---sum types (or any other type) are totally fine to persist and query for.
 
@@ -96,6 +96,8 @@ Something that might not be obvious is that this API can be used to implement in
 That's the API. Storing and querying for data should be simple, and shouldn't force you to work with weird representations of your data types or worry about parsing and serialization. As [in the distributed evaluation API](/2015-06-02/distributed-evaluation.html#what-about-customizing-the-encoding), you can of course customize how things are encoded just by _using regular Unison code_, before the data is persisted and/or after it comes out of the store.
 
 Now why _isn't_ it this simple today? The reason: databases and languages are usually designed and implemented completely separately. There's a runtime barrier between the language and the database, and all static type information gets tossed out when crossing this barrier, just like going to and from text files or streams of bytes on a network socket. The programmer thus deals with parsing and serialization explicitly at this barrier, and there's also often an impedance mismatch since the database represents concepts in different ways than our programs (or can't represent some concepts well at all, like sum types). All this generates a huge amount of knock-on complexity. Taking a step back and addressing the problem in a cohesive way with better assumptions eliminates all that complexity. This is [a running theme around here](/2015-06-02/distributed-evaluation.html)!
+
+_Also see [part 2](/2015-12-22/data-api-implementation.html) and [part 3](/2016-01-25/pcbt-merges.html)_
 
 ### <a id="appendix"></a>Appendix: bulk inserts, permutations, and joins
 

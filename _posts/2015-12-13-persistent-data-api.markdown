@@ -5,7 +5,9 @@ title: Initial sketch of the Unison persistent data API
 post_author: Paul Chiusano
 ---
 
-I'm taking a very short break from work on the editor to do a design writeup. This post presents a design for the Unison persistent data API. With this API, users will be able to store _arbitrary_ Unison values, _including functions_, without having to deal with any parsing or serialization logic. Unlike SQL, this API doesn't awkwardly force the user to encode everything as tuples or named tuples---sum types (or any other type) are totally fine to persist and query for.
+_Also see [part 2](/2015-12-22/data-api-implementation.html) and [part 3](/2016-01-25/pcbt-merges.html)._
+
+I'm taking a break from work on the editor to do a design writeup. This post presents a design for the Unison persistent data API. With this API, users will be able to store _arbitrary_ Unison values, _including functions_, without having to deal with any parsing or serialization logic. Unlike SQL, this API doesn't awkwardly force the user to encode everything as tuples or named tuples---sum types (or any other type) are totally fine to persist and query for.
 
 Though the API doesn't force awkward encodings onto the user, it's not dynamically typed or schemaless either. A `Data` object has a particular type, it's a `Data a`, which denotes a set of values of type `a`. Thus a "schema migration" isn't some dynamically typed SQL script that's run against a live database and might explode at runtime, it's an ordinary Unison function, statically checked using the Unison typechecker and trivially testable on a mock dataset.
 

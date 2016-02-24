@@ -14,7 +14,7 @@ Is this really possible? Yes. Let's return to first principles. _Why_ do we "com
 * Parsing / typechecking, and reporting errors to the user
 * Producing a representation of the code which can be executed efficiently and then (for various reasons no longer particularly relevant) _emitting this representation as a file_
 
-Then there's often a third step, _linking_, that actually takes these separately compiled files and resolves all references between them, producing something you can actually evaluate. Sometimes we wait until runtime to do this and generate arcane errors if there's a missing reference!
+Then there's often a third step, _linking_, that actually takes these separately compiled files and resolves all references between them, producing something you can actually evaluate. Sometimes we wait until runtime to _even check whether the references exist_ and generate arcane errors if something is missing!
 
 In Unison, the editor constrains the program to be well-formed and well-typed. So there is no need for a separate parsing or typechecking phase; we get instantaneuous feedback while editing, and programs typecheck (and of course are well-formed) by construction. So when I say let's stop "building" and "compiling" code, I'm not saying "let's throw out static types", static types are awesome! But let's not write a bunch of code as a blob of text then submit it to the typechecker _as a separate phase from editing._
 

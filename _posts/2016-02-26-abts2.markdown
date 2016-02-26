@@ -1,0 +1,99 @@
+---
+layout: post
+categories: [updates]
+title: Bugfixes, safer abstract binding trees, and a typechecker rewrite
+post_author: Paul Chiusano
+---
+
+Haven't posted in a while. I've been working on squashing bugs in the editor and trying to get it to a less embarassing state before posting it online for folks to try. (Though the brave can try it now just by building the project yourself! See the [GitHub page for instructions](https://github.com/unisonweb/unison).)
+
+After one bug caused by incorrect variable freshening in the typechecker, and a growing lack of confidence that I was handling things correctly everwhere else, I got annoyed and decided to take a step back and rethink how I was dealing with variable binding. I'm now using a really simple "extension" to [abstract binding trees](http://semantic-domain.blogspot.com/2015/03/abstract-binding-trees.html) (ABTs) that makes them almost impossible to use incorrectly. I am guessing it is not a new idea, but it's simple and effective.
+
+A bit of background. Any programming language will have multiple forms of binders, where binders are "language constructs that introduce variables". Some examples:
+
+* `\x -> x + 1` (a lambda function, introduces the variable x)
+* `case xs of x :: xs -> ...; case [] -> ...` (pattern matching, each branch introduces some new variables and perhaps shadows outer ones)
+* `forall a . [a] -> Maybe a` (a quantified type, introduces type variables)
+* `let x = foo 23 + 4 in x*x` (let binding, introduces the variable `x`)
+* ... and so on
+
+When writing a language and a typechecker, there are all sorts of operations one needs to implement that manipulate binders, and lots of ways to screw them up, especially if you use a really naive approach to representing variables and binders like:
+
+```Haskell
+-- don't do this, unless it's a toy
+data Expr
+  = Var String
+  | Lam String Expr
+  | App Expr Expr
+```
+
+With ABTs, we have just _one_ way that variables are introduced, the `Abs` (for 'abstraction' or 'abstractor') constructor, and various operations such as alpha equivalence and capture-avoiding substitution can be written generically once and for all. Great! The problem is that when deconstructing an ABT via pattern matching, it's still pretty easy to accidentally reference parts of the ABT that need to be freshened. For example:
+
+```Haskell
+case term of
+  Lam (Abs v body) -> <dostuff>
+```
+
+At the point of the `<dostuff>` we might have to freshen `v` and rename `v` in `body`, but the types don't compel us to do that. The old `v` and `body` are introduced in scope by default and we now need to remember to do something extra if that's not the behavior we want.
+
+As a general rule, if an API makes decisions for the user, those decisions _had better be the right ones._ And if we can't be sure what the correct decision is, or if it depends on what the user is doing, better to have an API that _forces the user to make an explicit decision_. It's the same sort of idea as using `Maybe` or `Either` for error handling. By returning a `Maybe a` (rather than throwing an exception), the user is _forced_ to make a decision about how to handle the result. They can defer handling the error if they wish, or handle it themselves, but either way, they have to be explicit. The types guide the programmer to _think explicitly_ about what behavior they want, and that leads to fewer bugs.
+
+Applying this principle to ABTs, we are just going to introduce some _smart patterns_ that force the user to decide what to do when walking under a binder:
+
+```Haskell
+data Subst f v =
+  Subst { freshen :: forall m v' . Monad m => (v -> m v') -> m v'
+        , bind    :: Term f v -> Term f v }
+
+pattern Abs' subst <- (unabs1 -> Just subst)
+
+unabs1 :: (Foldable f, Functor f, Var v) => Term f v -> Maybe (Subst f v)
+unabs1 (Term _ (Abs v body)) = Just (Subst freshen bind) where
+  freshen f = f v
+  bind x = subst v x body
+unabs1 _ = Nothing
+```
+
+Here, `subst` is the capture-avoiding substitution operation defined generically for ABTs.
+
+Now, when walking under an `Abs`, we no longer get some (possibly stale) variable and body dumped into scope that we must remember to freshen; instead we have a HOAS-like interface which forces us to make an explicit decision. Here's an example use:
+
+```Haskell
+-- for some typechecking monad `M`
+-- freshenVar :: v -> M v
+
+case term of
+  Lam (Abs' f) -> do
+    v' <- ABT.freshen f freshenVar
+    -- v' <- ABT.freshen f pure -- if for some reason we didn't want to freshen
+    body <- pure $ ABT.bind f (ABT.var v')
+    ...
+```
+
+Simple, explicit, and hard to misuse. I converted the typechecker over to this approach. It ended up taking a while, but it squashed several bugs along the way and I'm really liking it so far.
+
+### Capture-avoiding paths
+
+Somewhat related, I am frequently working with _paths_ into a Unison term or type. A common operation is wanting to _modify_ (using some function) the subterm or subtype at a particular path. Again, the default signature is error prone, as it doesn't force the user to be explicit:
+
+```Haskell
+modify :: Path -> (Term f v -> Term f v) -> Term f v
+```
+
+Consider a call like `modify loc (x -> app (var "f") x)`. Hmm, did we mean to allow the `var "f"` to capture whatever `f` might be in scope at that path? Or do we want to make sure we rename any binders we pass along the path to make sure our `var "f"` isn't captured by any of them? Since we don't know, better to make it explicit:
+
+```Haskell
+data V v = Free v | Bound v
+modify :: Path -> (Term f v -> Term f (V v)) -> Term f v
+
+wrapV :: Term f v -> Term f (V v)
+wrapV = vmap Bound
+
+vmap :: (v -> v2) -> Term f v -> Term f v2
+```
+
+Now when calling `modify`, we have to be explicit about which parts of the replacement may by captured by surrounding abstractions. Any variables marked `Free` will be guaranteed not to be captured.
+
+With the ABT approach, the types are simple, and the safety comes from having a small kernel of core operations that are implemented once and for all, and are easy to audit. After getting those correct, we try to implement everything else in terms of the known-good kernel.
+
+That's all for now.

@@ -1,4 +1,4 @@
-# Job Posting, __Stage N Software__
+# Job Posting, Stage N Software
 
 #### Join us to help build _Unison_, a revolutionary new platform for software development
 

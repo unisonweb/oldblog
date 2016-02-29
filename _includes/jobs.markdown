@@ -1,6 +1,6 @@
 # Job Posting, __Stage N Software__
 
-### Join us to help build _Unison_, a revolutionary new platform for software development
+#### Join us to help build _Unison_, a revolutionary new platform for software development
 
 [Unison](http://unisonweb.org) is a new, open programming platform being designed and implemented from the ground up to be 10-100x more productive than any programming tech in widespread use. [Read more about it here](http://unisonweb.org/2015-05-07/about.html).
 

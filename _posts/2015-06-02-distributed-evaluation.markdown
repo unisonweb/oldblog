@@ -54,7 +54,7 @@ await : Future a -> Remote a
 
 Thus multiple evaluations may be spawned at different nodes, and their results collected. There's no error handling, and that is fine for now. The only form of error recovery allowed in `Remote` will be functions like:
 
-```
+```Haskell
 -- try evaluation at the first node, then the second node, until one succeeds
 fallback : List Node -> a -> Remote (Future a)
 
@@ -66,30 +66,7 @@ So we can recover from errors, but only to repeat the same computation. Or we ca
 
 This API is perfectly suitable and it lets us express distributed, parallel evaluation of pure expressions.
 
-#### Detour: algebraic effects
-
-Using monads for tracking the `Remote` effect works fine, but it's a bit of a sledgehammer. I'm not the first person to observe that it's rather unfortunate that for one monad (the `Identity` monad), we get very nice syntax, whereas if we select a different monad (say `Remote`), we pay a heavier syntactic burden. It's not just about syntax, though. Real programs will often involve multiple effects, and monad stacks force us to pick a nesting of effects (which can impose some plumbing code) even in cases where the order of nesting is not significant. There are various ways of making the API for this nicer (the mtl classes certainly help), but none of these seem as elegant as just directly supporting _algebraic effects_ in the language.
-
-If we added algebraic effects to Unison (something I'd like to explore), the syntax becomes lighter:
-
-```Haskell
--- hypothetical syntax, completely made up
-at : Node -> {e} a -> {Remote .. e} a
-
--- foo "hi" (at node1 (1 + 1))
-```
-
-And we just use ordinary function application to work with remote values, rather than monadic syntax everywhere. Effects propagate as you'd expect, and you can use type signatures to control what effects you'd like to allow in different parts of your programs. Conor McBride's nice work on [the Frank language](https://personal.cis.strath.ac.uk/conor.mcbride/pub/Frank/) has worked out a lot of the details, and I look forward to stealing ideas from it! There's also a lot of other good work on algebraic effects. More on all that in another post.
-
-Monadic effects do have a lot going for them:
-
-* They require no fancy type system features (not even typeclasses are really necessary)
-* They are completely explicit. One can inspect a chunk of code and understand what effects are present and how they are handled, and it's very 'syntactic'. Some people like this. (I kind of like this aspect, or I suppose I have gotten used to it!)
-* They are proven to work. Haskell programmers have been doing just fine with monadic effects (though there is something of a [cottage industry of figuring out encodings for algebraic effects in Haskell](https://hackage.haskell.org/package/effect-handlers)). Then again, lots of things are "proven to work". That doesn't mean they are the best solution or that we shouldn't consider alternatives!
-
-But monadic effects impose enough of a tax that Haskell programmers often don't bother with making effects more fine-grained even in cases where it might be otherwise beneficial. Doing so imposes some plumbing code and worse syntax (compared to pure code), and so people tend not to do it unless there are other significant benefits. (So, we still have `IO`, which includes literally everything you could possibly do in Haskell, including read and write access to the file system and the ability to launch the missiles.) The ideal type system eliminates barriers to making types as precise as the programmer finds useful.
-
-I'll continue using monadic syntax for the rest of this post for clarity.
+Using monads for tracking the `Remote` effect works fine, but it's a bit of a sledgehammer. See the [appendix](#appendix) for some more discussion of that.
 
 ### Implementation
 
@@ -205,7 +182,7 @@ All right, but sometimes we will actually want to allow some evaluation of effec
 
 The way this works is quite simple. A sandbox is represented as a collection of hashes and/or builtin function references. Since Unison expressions are [linked _only_ at runtime](/2015-05-22/why-compile.html#post-start), it simply isn't possible for an expression to statically "bake in" the definition of some function it shouldn't have access to. The only place it can obtain definitions for functions and ways of evaluating builtins is at runtime, from the runtime environment, so it is trivial to provide access to a limited set of capabilities.
 
-A node can have a sandbox associated with every other node that attempts remote evaluation. The permissions can be very fine-grained. Node _Alice_ might allow node _Bob_ to remotely evaluate pure code, _not including subtraction_. Or perhaps _Alice_ allows _Bob_ to read just a single number. But _Alice_ might allow node _Eve_ to evaluate _all_ pure code. More general policies are possible, here are just a few ideas:
+A node can have a sandbox associated with every other node that attempts remote evaluation. The permissions can be very fine-grained. Node _Alice_ might allow node _Bob_ to remotely evaluate pure code, _not including subtraction_ (not the most realistic example, but you get the idea). Or perhaps _Alice_ allows _Bob_ to read just a single number. But _Alice_ might allow node _Eve_ to evaluate _all_ pure code. More general policies are possible, here are just a few ideas:
 
 * Allow only evaluation of pure code (with a small time budget) from arbitrary nodes
 * Allow all capabilities for any node that can prove ownership of a private key
@@ -349,3 +326,28 @@ map : (a -> b) -> Foo a -> Foo b
 ```
 
 In evaluating `map`, we probably want the implementation of `map` for `Foo a` and the `a -> b` to live on the same node. (I've used `Foo` here to stand in for some data type that may not be "ubiquitous" across all nodes.) As Fredrikson's work demonstrates, we could still evaluate `map f foo` by bouncing evaluation back and forth between the node that has the function and the node that has the definition of `map` for `Foo`. But that's going to be pretty slow and involve lots of network traffic. The constraint of not being able to serialize arbitrary functions is quite limiting.
+
+### Appendix: algebraic effects
+
+Using monads for tracking the `Remote` effect works fine, but it's a bit of a sledgehammer. I'm not the first person to observe that it's rather unfortunate that for one monad (the `Identity` monad), we get very nice syntax, whereas if we select a different monad (say `Remote`), we pay a heavier syntactic burden. It's not just about syntax, though. Real programs will often involve multiple effects, and monad stacks force us to pick a nesting of effects (which can impose some plumbing code) even in cases where the order of nesting is not significant. There are various ways of making the API for this nicer (the mtl classes certainly help), but none of these seem as elegant as just directly supporting _algebraic effects_ in the language.
+
+If we added algebraic effects to Unison (something I'd like to explore), the syntax becomes lighter:
+
+```Haskell
+-- hypothetical syntax, completely made up
+at : Node -> {e} a -> {Remote .. e} a
+
+-- foo "hi" (at node1 (1 + 1))
+```
+
+And we just use ordinary function application to work with remote values, rather than monadic syntax everywhere. Effects propagate as you'd expect, and you can use type signatures to control what effects you'd like to allow in different parts of your programs. Conor McBride's nice work on [the Frank language](https://personal.cis.strath.ac.uk/conor.mcbride/pub/Frank/) has worked out a lot of the details, and I look forward to stealing ideas from it! There's also a lot of other good work on algebraic effects. More on all that in another post.
+
+Monadic effects do have a lot going for them:
+
+* They require no fancy type system features (not even typeclasses are really necessary)
+* They are completely explicit. One can inspect a chunk of code and understand what effects are present and how they are handled, and it's very 'syntactic'. Some people like this. (I kind of like this aspect, or I suppose I have gotten used to it!)
+* They are proven to work. Haskell programmers have been doing just fine with monadic effects (though there is something of a [cottage industry of figuring out encodings for algebraic effects in Haskell](https://hackage.haskell.org/package/effect-handlers)). Then again, lots of things are "proven to work". That doesn't mean they are the best solution or that we shouldn't consider alternatives!
+
+But monadic effects impose enough of a tax that Haskell programmers often don't bother with making effects more fine-grained even in cases where it might be otherwise beneficial. Doing so imposes some plumbing code and worse syntax (compared to pure code), and so people tend not to do it unless there are other significant benefits. (So, we still have `IO`, which includes literally everything you could possibly do in Haskell, including read and write access to the file system and the ability to launch the missiles.) The ideal type system eliminates barriers to making types as precise as the programmer finds useful.
+
+I'll continue using monadic syntax for the rest of this post for clarity.

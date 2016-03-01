@@ -317,7 +317,7 @@ Like most imperative code, there are a lot of ways to mess this up (I'm not sure
 
 The low-level API is quite expressive, but the intent is that it gets used to build higher-level APIs like the one given at the start of this post. Not having to worry about serialization, plumbing code, or resource safety makes life much easier.
 
-### <a id="appendix"></a>Appendix: evaluating distributed, higher-order programs without serialization functions
+### <a id="appendix"></a>Appendix: evaluating distributed, higher-order programs without serializing functions
 
 [Olle Fredrikson et al. have worked out the details](http://www.cs.bham.ac.uk/~drg/papers/ifl14.pdf) of how to evaluate arbitrary higher-order functional programs on a collection of nodes, _without ever sending a function between nodes_. You might be amazed this is even possible. But a little though reveals that this approach, while fascinating and probably quite useful in some contexts, will sometimes result in a huge amount of network communication. Consider the function:
 

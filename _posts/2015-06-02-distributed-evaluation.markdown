@@ -11,15 +11,9 @@ I welcome feedback on the design, especially if you can poke holes in it! Questi
 
 In Unison, since [everything is uniquely identified by nameless hash](http://unisonweb.org/2015-05-18/let-blocks.html#hashing), there are never naming conflicts in sending a term, type, or runtime value from one Unison node to another (ignoring astronomically small chance of hash collisions for now). Languages with a global symbol namespace (just about every language) have more difficulties---in order to send a value from one node to another, we either need to come up with some ad hoc encoding for the particular sorts of values we'd like to send (a major source of boilerplate), ensure that both nodes agree on the meaning of each symbol being referenced in the global namespace (doesn't scale and leads to dependency hell), or apply some transformations to our programs to avoid ever having to send anything other than a small set of "ubiquitous" primitives whose meaning all nodes agree upon.
 
-This last approach is pretty interesting. [Olle Fredrikson et al. have worked out the details](http://www.cs.bham.ac.uk/~drg/papers/ifl14.pdf) of how to evaluate arbitrary higher-order functional programs on a collection of nodes, _without ever sending a function between nodes_. You might be amazed this is even possible. But a little though reveals that this approach, while fascinating and probably quite useful in some contexts, will sometimes result in a huge amount of network communication. Consider the function:
+This last approach is interesting but not all that practical. See the [appendix](#appendix) for details. 
 
-```Haskell
-map : (a -> b) -> Foo a -> Foo b
-```
-
-In evaluating `map`, we probably want the implementation of `map` for `Foo a` and the `a -> b` to live on the same node. (I've used `Foo` here to stand in for some data type that may not be "ubiquitous" across all nodes.) As Fredrikson's work demonstrates, we could still evaluate `map f foo` by bouncing evaluation back and forth between the node that has the function and the node that has the definition of `map` for `Foo`. But that's going to be pretty slow and involve lots of network traffic. The constraint of not being able to serialize arbitrary functions is quite limiting.
-
-So, I'm led to the opinion that moving away from a global symbol namespace is the nicest choice to make here. Identifying entities by a hash of their content sidesteps lots of complexities and gives us a trivial, fully-generic way of sending values (and all dependencies of these values) between nodes. Let's start with this assumption and then attempt to build a nice API from there.
+So, I'm led to the view that moving away from a global symbol namespace is the nicest choice to make here. Identifying entities by a hash of their content sidesteps lots of complexities and gives us a trivial, fully-generic way of sending values (and all dependencies of these values) between nodes. Let's start with this assumption and then attempt to build a nice API from there.
 
 ### The API
 
@@ -345,3 +339,13 @@ Like most imperative code, there are a lot of ways to mess this up (I'm not sure
 * All nodes have a loop running which handle the other end of this protocol.
 
 The low-level API is quite expressive, but the intent is that it gets used to build higher-level APIs like the one given at the start of this post. Not having to worry about serialization, plumbing code, or resource safety makes life much easier.
+
+### <a id="appendix"></a>Appendix: evaluating distributed, higher-order programs without serialization functions
+
+[Olle Fredrikson et al. have worked out the details](http://www.cs.bham.ac.uk/~drg/papers/ifl14.pdf) of how to evaluate arbitrary higher-order functional programs on a collection of nodes, _without ever sending a function between nodes_. You might be amazed this is even possible. But a little though reveals that this approach, while fascinating and probably quite useful in some contexts, will sometimes result in a huge amount of network communication. Consider the function:
+
+```Haskell
+map : (a -> b) -> Foo a -> Foo b
+```
+
+In evaluating `map`, we probably want the implementation of `map` for `Foo a` and the `a -> b` to live on the same node. (I've used `Foo` here to stand in for some data type that may not be "ubiquitous" across all nodes.) As Fredrikson's work demonstrates, we could still evaluate `map f foo` by bouncing evaluation back and forth between the node that has the function and the node that has the definition of `map` for `Foo`. But that's going to be pretty slow and involve lots of network traffic. The constraint of not being able to serialize arbitrary functions is quite limiting.

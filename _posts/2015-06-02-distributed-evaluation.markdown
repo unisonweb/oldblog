@@ -349,5 +349,3 @@ Monadic effects do have a lot going for them:
 * They are proven to work. Haskell programmers have been doing just fine with monadic effects (though there is something of a [cottage industry of figuring out encodings for algebraic effects in Haskell](https://hackage.haskell.org/package/effect-handlers)). Then again, lots of things are "proven to work". That doesn't mean they are the best solution or that we shouldn't consider alternatives!
 
 But monadic effects impose enough of a tax that Haskell programmers often don't bother with making effects more fine-grained even in cases where it might be otherwise beneficial. Doing so imposes some plumbing code and worse syntax (compared to pure code), and so people tend not to do it unless there are other significant benefits. (So, we still have `IO`, which includes literally everything you could possibly do in Haskell, including read and write access to the file system and the ability to launch the missiles.) The ideal type system eliminates barriers to making types as precise as the programmer finds useful.
-
-I'll continue using monadic syntax for the rest of this post for clarity.

@@ -31,9 +31,9 @@ Let's look at what happens if we try to choose something _ill-typed_ in the expl
 
 <video width="100%" height="auto" controls="true"><source src="videos/plus1-err.mp4" type="video/mp4"></video>
 
-We still learn the type of what we've entered (helpful for understanding where we've gone wrong), but since it doesn't match the goal type of `Number`, the editor won't let us select it! The Unison editor enforces that code is well-typed by construction, not just syntactically valid. This experience of not being allowed to select a search result in the explorer is the closest we get to a type error.
+We still learn the type of what we've entered (helpful for understanding where we've gone wrong), but since it doesn't match the goal type of `Number`, the editor won't let us select it! This experience of not being allowed to select a search result in the explorer is the closest we get to a type error.
 
-_Aside:_ Type errors are a usability catastrophe, for both beginners [and experts](/2015-03-26/type-errors.html), and language implementators invest huge amounts of time and engineering effort figuring out how to report errors 'well' (for [some definition of 'well'](https://gist.github.com/pchiusano/57edebe68e1c621360ca)). But wait a minute, isn't it a bit odd that the default way of editing programs is totally _unstructured_ raw text editing, which allows all kinds of edits that make _no sense whatsoever_? Turns out this is mostly just some legacy thinking leftover from the [punchcard era of programming](/2014-09-30/punchcard-era.html). Good riddance!
+_Aside:_ Type errors are a usability catastrophe, for both beginners [and experts](/2015-03-26/type-errors.html), and language implementators invest huge amounts of time and engineering effort figuring out how to report errors 'well' (for [some definition of 'well'](https://gist.github.com/pchiusano/57edebe68e1c621360ca)). But when you think about it, it's a bit odd that the default way of editing programs is totally _unstructured_ raw text editing, which allows all kinds of edits that make _no sense whatsoever_. Why should we accept this assumption, which dates back to [the punchcard era of programming](/2014-09-30/punchcard-era.html), when no other options existed?
 
 Okay, let's build something a little more interesting which shows a couple more features:
 

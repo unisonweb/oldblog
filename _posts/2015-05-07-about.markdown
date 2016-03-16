@@ -5,9 +5,9 @@ title: About
 post_author: Paul Chiusano
 ---
 
-Unison is a new programming platform, being designed from the ground up. It rethinks just about every aspect of the programming experience. This page shows a little bit of what's possible (or will be possible soon) with Unison.
+Unison is a new programming platform that rethinks just about every aspect of the programming experience. This page shows a little bit of what's possible (or will be possible soon) with Unison.
 
-We'll start with the editor. Unison programs are edited in a _semantic editor_. Interactions in this editor are highly structured---we get rich guidance from the typechecker and are prevented from making various silly mistakes that are possible when plain-text editing. Here we have an editor session, displaying just a single expression, a bit of text, which we'll edit:
+We'll start with the editor. Unison programs are edited in a _semantic editor_. Interactions in this editor are highly structured---we get rich guidance from the typechecker and are prevented from making various silly mistakes that are possible when plain-text editing. Let's have a look. Here we have an editor session, displaying just a single expression, a bit of text, which we'll edit:
 
 <video width="100%" height="auto" controls="true"><source src="videos/editing-text.mp4" type="video/mp4"></video>
 

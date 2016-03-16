@@ -1,7 +1,7 @@
 ---
 layout: post
 categories: [updates]
-title: Semantic editing of programs is faster and easier than text editing
+title: Semantic editing makes programming faster and easier than text editing
 post_author: Paul Chiusano
 ---
 

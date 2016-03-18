@@ -5,9 +5,9 @@ title: About
 post_author: Paul Chiusano
 ---
 
-Unison is a new programming platform that rethinks just about every aspect of the programming experience. This page shows a little bit of what's possible (or will be possible soon) with Unison.
+Unison is a new programming platform that rethinks just about every aspect of the programming experience. This page shows a little bit of what's possible (or will be possible soon) with Unison. We'll start with the editor, which _has_ to work differently given Unison's simplified approach to building distributed systems and dealing with persistence. (More on that later!)
 
-We'll start with the editor. Unison programs are edited in a _semantic editor_. Interactions in this editor are highly structured---we get rich guidance from the typechecker and are prevented from making various silly mistakes that are possible when plain-text editing. Let's have a look. Here we have an editor session, displaying just a single expression, a bit of text, which we'll edit:
+Unison programs are edited in a _semantic editor_. Interactions in this editor are highly structured---we get rich guidance from the typechecker and are prevented from making various silly mistakes that are possible when plain-text editing. Let's have a look. Here we have an editor session, displaying just a single expression, a bit of text, which we'll edit:
 
 <video width="100%" height="auto" controls="true"><source src="videos/editing-text.mp4" type="video/mp4"></video>
 
@@ -31,7 +31,7 @@ Let's look at what happens if we try to choose something _ill-typed_ in the expl
 
 <video width="100%" height="auto" controls="true"><source src="videos/plus1-err.mp4" type="video/mp4"></video>
 
-We still learn the type of what we've entered (helpful for understanding where we've gone wrong), but since it doesn't match the goal type of `Number`, the editor won't let us select it! This experience of not being allowed to select a search result in the explorer is the closest we get to a type error. (FAQ: how do we make large-scale edits without breaking things? See [this post for details](/2015-06-12/editing.html))
+We still learn the type of what we've entered (helpful for understanding where we've gone wrong), but since it doesn't match the goal type of `Number`, the editor won't let us select it! This experience of not being allowed to select a search result in the explorer is the closest we get to a type error. This seems limiting but it's not really; the programmer can insert _blanks_ anywhere in their program (deferred bits of code), build up fragments of code 'off to the side', and generally work in sketches, gradually bringing together bits of code. (FAQ: how do we make large-scale edits to a codebase without breaking things? See [this post for details](/2015-06-12/editing.html))
 
 _Aside:_ Type errors are a usability catastrophe, for both beginners [and experts](/2015-03-26/type-errors.html), and language implementators invest huge amounts of time and engineering effort figuring out how to report errors 'well' (for [some definition of 'well'](https://gist.github.com/pchiusano/57edebe68e1c621360ca)). But when you think about it, it's a bit odd that the default way of editing programs is totally _unstructured_ raw text editing, which allows all kinds of edits that make _no sense whatsoever_. Why should we accept this assumption, which dates back to [the punchcard era of programming](/2014-09-30/punchcard-era.html) when no other options existed?
 
@@ -62,7 +62,7 @@ Before we get to the 'how', let's look at a piece of the Unison API for building
 at : Node -> a -> Remote a
 ```
 
-That is, we can take absolutely any value at all, and transport it to another Unison node, obtaining a handle to the computation so we can extend it further if we like. A `Remote a` is a description of a computation that may proceed on one or more nodes, and it comes equipped with a rich set of operations. Let's look at `map`:
+That is, we can transport any value at all to another Unison node, obtaining a handle to the computation so we can extend it further if we like. A `Remote a` is a description of a computation that may proceed on one or more nodes, and it comes equipped with a rich set of operations. Let's look at `map`:
 
 ```Haskell
 map : (a -> b) -> Remote a -> Remote b
@@ -76,16 +76,16 @@ In this video, we create a computation which runs on `server1`. The first part o
 
 _Aside:_ For more details on this API, as well as discussion of how it can be made secure, check out [this post](/2015-06-02/distributed-evaluation.html) which walks through the design in detail.
 
-With this API we get to be very precise about where computations take place, so in one sense it's very explicit, but we're also totally freed from the usual boilerplate and plumbing code we'd have to write when moving values and computations around in our distributed system. We simply declare that we want a value transported to some other node, and that's it! We can continue our computation there, hop to any other node, and so on! Building distributed systems does have more sources of essential complexity... but the idea is that Unison lets us focus on the essence of the problem, not the mundane details.
+With this API we get to be very precise about where computations take place, so in that sense it's very explicit, but we're also totally freed from the usual boilerplate and plumbing code we'd have to write when moving values and computations around in our distributed system. No JSON parsing or encoding, no low-level networking code, etc, we simply declare that we want a value transported to some other node, and that's it! We can continue our computation there, hop to any other node, and so on! Building distributed systems does have more sources of essential complexity... but the idea is that Unison lets us focus on the essence of the problem, not the mundane details.
 
 _Aside:_ The exact same principles apply to dealing with persistent state. We should be able to [trivially persist arbitrary values (including functions)](/2015-12-13/persistent-data-api.html), rather than having to deal with boilerplate converting to and from SQL or to and from JSON or whatever ad-hoc format is consumed by some NoSQL store.
 
-All right, now how is this achieved? The idea is very simple, but it has far-reaching consequences. In Unison, values are identified not by name, but by a cryptographic _hash_ of their definition. That is, suppose I write a function: `sum`, for adding up a vector of numbers. In Unison, we identify that function by a hash of its implementation---the name `sum` is 'just' human-readable metadata associated with that hash (which the editor of course uses for display purposes and lookup). This has a number of very positive benefits:
+All right, now how is this achieved? The idea is simple, but it has far-reaching consequences. In Unison, values are identified not by name, but by a cryptographic _hash_ of their definition. That is, suppose I write a function: `sum`, for adding up a vector of numbers. In Unison, we identify that function by a hash of its implementation---the name `sum` is 'just' human-readable metadata associated with that hash (which the editor of course uses for display purposes and lookup). This has a number of very positive benefits:
 
 * Using content-based hash to uniquely identify everything means that all Unison nodes have a shared understanding of what each hash means (ignoring [astronomically tiny chance of hash collisions](/2015-09-30/hash-collisons.html)). Thus, to transport an arbitrary value from one node to another, the recipient node just asks for any hashes it doesn't already know about. Once all the required hashes are present on the recipient node, the computation can proceed from there. This sort of thing is difficult or impossible to achieve in languages that use names for identity. In Unison, it's easy.
 * It's trivial to persist arbitrary values in the Unison language and read them back anytime later. Persistence is just another serialization problem. Languages that do attempt to provide some platform-level serialization support have all sorts of fragility and problems introduced because names are used for identity (what if one of the types or libraries referenced has 'changed' in the time between the value being persisted and it being read?). In Unison, these concerns are entirely avoided.
 * Using content-based hash for identity gives us incremental typechecking 'for free'. Since the value associated with a hash never changes, we can compute its type once, and simply look it up when needed.
-* Refactorings like 'rename' become trivial---they are no longer implemented via text munging, just by updating the metadata associated with a hash, in a single place.
+* Refactorings like 'rename' become trivial---they are no longer implemented via text munging, just by updating the metadata associated with a hash, in a single place. More generally, tools for refactoring get way easier to build when the codebase is a structured value and not a blob of text files.
 
 But it also raises new challenges and questions, which Unison has needed to address:
 

@@ -1,0 +1,48 @@
+---
+layout: post
+categories: [design]
+title: Unison as a substrate for the IoT, heterogeneous computing networks, interacting with foreign / legacy code, and social apps
+post_author: Paul Chiusano
+---
+
+In Unison, arbitrary values in the language may be serialized and persisted and/or transported to other Unison nodes, without fear of conflicts or dependency hell. This does raise an important question: how do we deal with Unison nodes with different local capabilities? For instance, a node might have access to a local database or its own local file system, or a legacy shared library. Or we might want to create an IoT application in which Unison is being used to abstract over a heterogeneous collection of appliances with different sensors.
+
+Here's a simple API:
+
+```Haskell
+data Capability a
+
+ask : Node -> Capability a -> Remote! (Maybe a)
+```
+
+A `Capability a` is an opaque token that we'll assume is backed by a GUID and the hash for the type 'a'. It lets us dynamically ask a node for a value of a given type. For example, a Unison node which abstracts over access to a database used for login info might support a `Capability (Username -> Remote! UserInfo)`. Other nodes might support this same capability, assuming they also have access to the same database.
+
+Any functions returned from `ask` will always be of the form `a -> .. -> Remote! r`, where the function is 'localized' to run at the given node. For the `userInfo : Capability (Username -> Remote! UserInfo)` example above, calling `ask node1 userInfo` will give back a function that runs _at node1_. This is important. The return value can't be pure---for instance a `Capability (Number -> Number)` wouldn't be allowed in general, since it would require the ability to transport the code for that `Number -> Number` to all other nodes. (To see why that can't be done, notice that the `Number -> Number` could be backed by some arbitrary third-party (possibly unsafe) C code, using OS features not supported on other nodes, etc.)
+
+We'll generally create these capability tokens outside of Unison, and load them into the node on startup. How that's done exactly isn't too important, but we can imagine an implementation of `ask` that just consults some `Map` of these capability tokens. It probably makes sense to publish the tokens someplace public along with documentation about what it means to properly implement that capability (the type is not always going to be sufficient). This way other nodes wishing to support that capability can do so.
+
+That's it.
+
+What does this solve?
+
+* This provides a way for Unison nodes to refer to legacy / third-party code. No need to rewrite all your stuff in Unison from the ground up. Granted, it can probably be made a bit more convenient, but that can be dealt with later.
+* This provides a way for write Unison programs that run on a collection of nodes with heterogeneous capabilities. This is useful for IoT-type applications, and any sort of computing environment where not all nodes have access to the same data and functions.
+* This provides a way to implement _social_ 'apps' and fine-grained control over sharing of personal information. This is worth elaborating on.
+
+### Social apps
+
+Imagine ordering food for a conference full of people while respecting everyone's preferences and/or allergies. We could:
+
+* Just order a random assortment of pizzas and salads and hope for the best. Okay, maybe this is totally fine and this isn't the most compelling example, but let's roll with it for a minute. 
+* Build or use some survey 'app' that aggregates everyone's food preferences and allergy info, then get everyone to use it, or perhaps try to get everyone to update the same spreadsheet 
+* Something much less efficient, like using email to coordinate food selection 
+
+The general problem with any approach that tries to get users to provide such info to you is that it forces them to do data entry, and it's repetitive. This might be okay if you're only asking users for a tiny amount of information, but there's too much friction in asking people to fill out a giant form, so we don't do that and instead rely on social conventions (in the spirit of the first option).
+
+But notice that one's food preferences don't change very often. The cost of actually communicating to a computer _once_ what your preferences are isn't so bad, especially if that info can be used by the organizers of lots of events that you attend. Another example is info like your mailing address---it doesn't change very often, and it would be great if you could just update it in one place, then release it to various third parties that you've authorized. 
+
+Things like ordering food for a conference and the like can be seen as examples of distributed programs. We have data which is decentralized, stored on a bunch of 'nodes' (either on the nodes controlled by each user, or in the brains of each user if they haven't transcribed it machine-readable form) and we need to pull together a bunch of this data and perform some useful computation. So how does Unison solve this problem?
+
+The general idea is that we can have capabilities like: `Capability FoodPreferences` and implement programs that order food for a conference full of people, aggregating preferences and ordering food in proportion to preferences. Another capability might be a `Capability NameAndAddress`. Importantly, we use the usual distributed programming API sandbox mechanism to control what capabilities can be accessed by foreign computations---so, you don't release your name and address or food preferences to just anyone, only to those you've authorized. The program to aggregate everyone's preferences could then be a simple one-liner, and it doesn't require that everyone store all their personal information with a trusted third party. 
+
+What is interesting is that the capabilities function a bit like standards that can be layered atop Unison, though there's much less work to integrate these 'standards' than would typically be required---there's no extra code to write, you simply need to declare what value you wish to associate with the type of the `Capability`, which is as little work as you could possibly do!

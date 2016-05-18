@@ -1,7 +1,7 @@
 ---
 layout: post
 categories: [musings]
-title: The trouble with standards
+title: The trouble with adoption of standards
 post_author: Paul Chiusano
 ---
 

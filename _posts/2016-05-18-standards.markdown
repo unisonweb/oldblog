@@ -6,6 +6,7 @@ post_author: Paul Chiusano
 ---
 
 ![Standards](http://imgs.xkcd.com/comics/standards.png)
+
 _credit: [XKCD](https://xkcd.com/927/)_
 
 Standards are a good idea. Getting people to agree ahead of time on an arbitrary convention makes it easier for systems to communicate. So why aren't they adopted? Here's the basic problem:

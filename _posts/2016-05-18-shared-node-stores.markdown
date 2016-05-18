@@ -5,7 +5,7 @@ title: Shared node storage and more efficient distributed execution
 post_author: Paul Chiusano
 ---
 
-_First, a quick update: I'm back from paternity leave and I also just wrapped up some client work so I'll be focused almost exclusively on unison for at least the next several months. I'm super excited to make more rapid progress now that I can really devote my full attention to it!_
+_First, a quick update: I'm back from [paternity leave](https://twitter.com/pchiusano/status/719621712434880512) and I also [just wrapped up some client work](http://pchiusano.github.io/2016-05-17/fs2-release.html) so I'll be focused on unison for at least the next several months. I'm super excited to make faster progress now that I can really devote my full attention to it!_
 
 I been thinking a lot about the implementation of the [unison distributed programming API](/2015-06-02/distributed-evaluation.html). Until now, I've been assuming there's is a one-to-one mapping between nodes and node stores---each node comes with its own store. So, for instance, you might have a million nodes, and the identity function (which has a unique hash) might be stored separately at every one of them. On the one hand, storage is pretty cheap, but allowing multiple nodes to reference the same store lets us _highly optimize_ the communication protocol used in the distributed programming API.
 

@@ -2,7 +2,6 @@ name: Unison
 url: http://unisonweb.org
 
 permalink: /:year-:month-:day/:title.html
-pygments: true
 markdown: kramdown
 kramdown:
   input: GFM

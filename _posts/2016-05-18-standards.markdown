@@ -14,7 +14,8 @@ Standards are a good idea. Getting people to agree ahead of time on an arbitrary
 * Using a standard requires an explicit integration step which is (very often) extra work. For instance: the data exists in your database, and providing an API to access some of that data in some standard form is extra work. That's time your pointy-haired-boss would prefer you spend implementing MOAR FEATURES!!
 * Standards often don't provide value on their own, independent of network effects.
 * Before the standard is adopted, there are no real network effects from its use, so early adopters of a standard don't benefit directly. That is, they are a _cost_ for early adopters.
-* Therefore, potential early adopters face the choice of 1) investing resources in an uncertain standard with potentially no future or 2) waiting until it looks like the standard is being widely adopted enough for their investment to pay off.
+* Conforming to a standard can be a design constraint (another cost)
+* Therefore, potential early adopters face the choice of 1) investing resources and paying costs for an uncertain standard with potentially no future or 2) waiting until it looks like the standard is being widely adopted enough for their investment to pay off.
 * _And everyone knows this_, which generates [common knowledge](https://en.wikipedia.org/wiki/Common_knowledge_(logic)) that investment in integration with standards is often unlikely to pay off, and a negative feedback loop. (I don't have much incentive to integrate with a standard now, and I know everyone else has that same incentive, therefore I can reason that the standard is unlikely to be widely adopted, which means I _really_ shouldn't bother integrating with it now.)
 
 Now here are some solutions. I'll use a running example: a standard for user accounts and logins.

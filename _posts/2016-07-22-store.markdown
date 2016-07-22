@@ -1,0 +1,12 @@
+---
+layout: post
+categories: [meta]
+title: Now you can buy rad Unison t-shirts, stickers, and whatnot to support the project
+post_author: Paul Chiusano
+---
+
+Exciting news! There's now a [Zazzle store](http://www.zazzle.com/unisonweb/products) where you can purchase way overpriced t-shirts, stickers, and other swag as a way to support the project and REPRESENT!! Like [the Patreon campaign](https://www.patreon.com/pchiusano), all income from the store (after Zazzle takes their cut) will go toward supporting the open-source project.
+
+Zazzle lets you customize things to a great degree, so consider the gallery just a sample of the possibilites. If you select any design, you can choose to customize it (want to put one of the designs on a hoodie? a coffee mug? switch the colors? you can do that). I have confirmed that most of the configurations shown there do in fact look pretty cool and have already given way too much money to Zazzle. As in, my wife starting asking serious questions when the third shipment rolled in...
+
+If you buy/make anything cool, feel free to tweet about it and mention [@unisonweb on Twitter](twitter.com/unisonweb) or #unisonweb.

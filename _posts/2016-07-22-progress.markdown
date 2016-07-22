@@ -1,0 +1,63 @@
+---
+layout: post
+categories: [design]
+title: Progress update!
+post_author: Paul Chiusano
+---
+
+No posts in a while, we've been very busy implementing stuff. Here's some news:
+
+* Sam Griffin is finishing up an implementation of a new interface we're calling `BlockStore`, and using it to implement `Index k v`, a persistent key-value store accessible to all Unison programs. I'll say more about that below.
+* Arya Irani has joined the project and I've been meaning to introduce him for a while. Arya works at a research lab and is getting some time to work on Unison open source stuff while at work. Awesome! So far, Arya has worked on:
+  * A Unison term and type parser which we are using to aid testing, and cleanup declaration of the various builtin Unison functions. This won't replace the Unison editor and is more of a stopgap, but it does remove the editor as a bottleneck (for instance, we don't need the editor to be more fully-featured just to write and test distributed Unison programs)
+  * From there, he's moved onto implementing a [new typechecking algorithm for Unison](http://semantic-domain.blogspot.com/2015/03/new-draft-sound-and-complete.html) that includes GADTs, among other things. Actually, before getting to that, he's schooling himself on type theory and working on reimplementing the current typechecking algorithm.
+* I've been cranking away at the implementation of [node containers](/2016-06-17/node-containers.html#post-start). I would say it is "pretty much done" but also totally untested. It involved implementing a rather interesting monad which I call `Multiplex`, for running potentially hundreds or thousands of logical stream computations off a single multiplexed stream.
+  * Before getting into debugging all this, I've starting thinking ahead and pondering how well the approach scales to building large clusters of Unison nodes, something I'd very much like to support. The conclusion I've reached: it scales quite well, so I'm going to switch back to implementing stuff.
+
+As described in the [node containers post](/2016-06-17/node-containers.html#post-start), we want to make Unison nodes extremely lightweight and fast to spawn. We also want nodes to play nicely in a large distributed cluster of other nodes. This turned out to have some interesting consequences---Unison nodes should probably _abstract_ over their storage layer in some fashion. If nodes are being put to sleep and woken up quite often, just reading/writing the local filesystem directly is problematic---how do we save/restore all the persistent state created by the node? One might be tempted to just store each node's persistent state in a separate directory... but then that can be inefficient, since lots of nodes may be referring to the same block of data. Not to mention, what if we're running in a cloud environment and want our node persistent state to live someplace more durable than a single machine's local filesystem? Without abstracting over the storage layer, we would need to invoke some other process (which the node is unaware of) to keep the local files synced elsewhere.
+
+Enter `BlockStore`, an interface for storing immutable blocks of data, and _mutable pointers_ to these blocks. All Unison node persistent state is parameterized on an implementation of `BlockStore`. We might make some further tweaks to the API, but it's quite general purpose and I believe you can implement just about any data structure on top of it:
+
+```Haskell
+data BlockStore addr = BlockStore {
+  insert :: ByteString -> IO addr,
+  lookup :: addr -> IO (Maybe ByteString),
+  -- | Will return a fresh address if Series not already declared, otherwise returns the result of `resolve`
+  declareSeries :: Series -> IO addr,
+  -- | Marks the `Series` as garbage, allowing it to be collected
+  deleteSeries :: Series -> IO (),
+  -- | Update the value associated with this series. Any previous value(s) for the series
+  -- are considered garbage after the `update` and may be deleted by the store.
+  update :: Series -> addr -> ByteString -> IO (Maybe addr),
+  -- | Like `update`, but does not delete the previous block written to the series
+  append :: Series -> addr -> ByteString -> IO (Maybe addr),
+  -- | Obtain the most recent address for a series
+  resolve :: Series -> IO (Maybe addr),
+  -- | Obtain all the addresses for a series
+  resolves :: Series -> IO [addr]
+}
+
+newtype Series = Series ByteString
+```
+
+The node process, when spawned, now involves zero copying of data. It operates on a 'proxy' `BlockStore` that forwards all requests to its parent container, so all nodes in the container can share the same storage layer. Caching at this layer thus benefits all nodes in the container, and we avoid unnecessary copying of blocks when communicating between nodes. This also plays nicely in a larger cluster setting, where the container itself may be using a `BlockStore` that writes to cloud storage of some sort.
+
+Another win: we can just shut down the node whenever we want and be assured we haven't lost any of its persistent state.
+
+The implementation of the node container got somewhat interesting. In Unison, we want to be free from needing to worry about manually freeing resources like OS file or network handles. This is both a huge source of bugs and a huge source of mental overhead for the programmer, just like manual memory management is in non GC languages. The consequence of this is that we can't just use regular OS level file handles or network sockets directly, since we'd have to remember to close them. The Unison solution to this problem is to not use OS resources directly, but instead operate on multiplexed stream---all communication with a node occurs over this multiplexed stream, which the node always listens on and never closes unless the node is shutting down. Thus, there is no manual opening and closing of OS file/network handles, and the Unison inter-node protocol could easily run over UDP.
+
+For connections to the outside world which _do_ require use of stateful handles, we use a concept of sticky resource pools. Logically, Unison behaves as if the resource is opened, used, and closed immediately. Behind the scenes, we delay closing the resource for a period of time, recycling the resource if it gets used again within that window, and closing it for real if not. This works great for things like TCP connections, etc. The Unison code doesn't need to manually open or close resources---it just behaves as things are "always open", and the programming model is pleasantly straightforward.
+
+As an example, consider the function:
+
+```Haskell
+at : Node -> a -> Remote a
+```
+
+Note all the things that are deliberately missing here. We don't need to say "open a connection to this node, handshake to establish a forward-secret encrypted session, then send this `a` value". (And wait a sec, when do we close that connection??) We just declare that we want the value transported to another node, and use the `Monad Remote` to extend the computation further on that node. The runtime takes care of doing everything efficiently, and there's no network connection handles to leak.
+
+This isn't exactly a new idea, and lots of libraries do some form of sticky resource pooling. In Unison we are just taking these ideas to their logical endpoint and eliminating the concept of scarce resources entirely from the normal programming model. 
+
+This all sounds great, except dealing with multiplexed streams can quickly turn into an unreadable mess of callbacks. The way to deal with multiplexing is to tag packets in the stream with a destination, and have the interpreter work with a map of callbacks, indexed by destination. Manually manipulating this map leads to super confusing code. But in Haskell it's quite easy to build a type (which I call `Multiplex`) which lets you write totally straightforward-looking monadic code, which when run turns into an inhuman program that manipulates the map of callbacks for processing the multiplexed stream. 
+
+Okay, that's all for now!

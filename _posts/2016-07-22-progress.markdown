@@ -1,6 +1,6 @@
 ---
 layout: post
-categories: [design]
+categories: [updates]
 title: Progress update!
 post_author: Paul Chiusano
 ---

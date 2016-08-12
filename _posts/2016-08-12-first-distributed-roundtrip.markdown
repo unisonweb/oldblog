@@ -47,7 +47,7 @@ Now that all this is basically working, we'll be focused on exploring what's pos
 * The distributed programming API which lets us contact other nodes and evaluate computations there (or spawn other nodes remotely)
 * A persistent data API, which lets us trivially persist arbitrary Unison terms and look them up later
 
-In case you missed it, here's the persistent data API:
+In case you missed it, here's v0 of the persistent data API:
 
 ```Haskell
 -- Simple local, persisted key-value storage
@@ -59,6 +59,8 @@ lookup :: k -> Index k v -> Remote (Maybe v)
 insert :: k -> v -> Index k v -> Remote ()
 delete :: k -> Index k v -> Remote ()
 ```
+
+Those are the actual type signatures - all Unison values can be persisted in this way, including functions! Just like in the distributed programming API, you don't deal with manual serialization or encoding to the database, or decoding on the other end.
 
 Lastly, some other notable stuff in the PR that is of general interest:
 

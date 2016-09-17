@@ -406,7 +406,7 @@ In contrast, doing a large refactoring when your codebase is an immutable data s
 
 ### Version control
 
-The command line tool I described above is meant to work nicely with existing version control systems. Your codebase is just a regular repository. You can commit your changes to version control at any point in time, use branches and do merges, host your Unison code on GitHub, etc. There seems to be very little surprising or new about how this plays out---from Git's perspective, a Unison codebase is just like any other bag of text files. The fact that we're manipulating this bag of text files in an usual way (compared to how we usually edit codebases) is not something Git really cares about.
+The command line tool I described above is meant to work nicely with existing version control systems. Your codebase is just a regular repository. You can commit your changes to version control at any point in time, use branches and do merges, host your Unison code on GitHub, etc. There seems to be very little surprising or new about how this plays out---from Git's perspective, a Unison codebase is just like any other bag of text files. The fact that we're manipulating this bag of text files in an unusual way (compared to how we usually edit codebases) is not something Git really cares about.
 
 But, there are a couple implications. First is that there are now only two ways to get a merge conflict:
 

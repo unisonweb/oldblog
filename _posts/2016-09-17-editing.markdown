@@ -1,0 +1,434 @@
+---
+layout: post
+categories: [design]
+title: The Unison codebase editing experience using plain-text tools
+post_author: Paul Chiusano
+---
+
+There are huge benefits to modeling the codebase as an immutable data structure, rather than a bag of text files that's mutated in place. This post talks about these benefits while walking through a design for how such a codebase can be edited using ordinary tools---your favorite text editor, Git, and a simple command line tool that I'll introduce here. The approach described is simple, easily implementable, and will let us test out the 'user experience' of Unison's immutable codebase and [refactoring story][refactoring]. Though I'll be showing how things work with a hypothetical command-line tool, it should be pretty clear how the same workflow could be quite nicely exposed in a richer semantic editor.
+
+[refactoring]: /2015-06-12/editing.html
+
+_Aside:_ In the long term, I want an awesome semantic editor to be the preferred way of writing and editing (Unison) code. But a plain-text interface will probably still be independently useful for lots of things, like taking plain text Unison code you find elsewhere (say, from a web page) and slurping it up into your local Unison codebase. Plain text isn't going away anytime soon and it's good to have a story for integrating with it. In the short term, it's also strategically useful to have this up and running, since it eases some of the pressure to get the Unison editor in top shape _now_ when [there's so much other stuff on the roadmap](https://github.com/unisonweb/unison/issues/101).
+
+All right, let's get to it! If you haven't read the [refactoring post][refactoring], that is good background.
+
+In Unison, the codebase is an immutable data structure. What does that mean? It means we never modify definitions in place, only introduce new definitions. It's a consequence of the fact that Unison identifies things not by name, but by a hash of their content. 'Modifying' a definition doesn't modify anything; it introduces a new definition, with a new hash. Example: if we 'modify' the definition of 'factorial', we actually create a new function, with a different hash:
+
+```Haskell
+factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
+```
+
+The hash of `factorial` is, say, `#8asdflkjasdf08`. If we 'modify' the definition of `factorial` to be:
+
+```Haskell
+factorial n = 42
+```
+
+We've actually just created a new definition, with a new hash, say `#zuzzzaaaff823`. All the references to `factorial` in our codebase are by hash, not by name, so nothing is initially referencing `#zuzzzaaaff823`. If we want to propagate the change, well, we are actually just creating new definitions, with new hashes, which reference the `#zuzzzaaaff823` hash rather than the original `#8asdflkjasdf08` hash. One can probably see how doing this sort of propagation manually might get a bit tedious. But we won't be doing that!
+
+So we have a somewhat different programming workflow, as we won't just be modifying a bag of text files in place. How will we edit code?
+
+Let's look at a sample editing session, using a hypothetical command-line tool:
+
+``` sh
+$ mkdir myunisoncode # or whatever you like
+$ cd myunisoncode
+$ ls
+```
+
+We start out with an empty directory. Let's create a new definition:
+
+``` sh
+$ unison new
+created a8sdfkjbqwx90.u - edit the code here
+created a8sdfkjbqwx90.markdown - edit the docs, usage examples here
+```
+
+The `a8sdfkjbqwx90` is a GUID that the `unison` command line tool conjures up for you. The `a8sdfkjbqwx90.u` file is just a scratch file where we can put a definition temporarily before slurping it up into the codebase. You can call `unison new` multiple times if you like to generate multiple scratch files. Note: we use GUIDs rather than sequential IDs so there aren't superfluous collisions when these Unison codebases are merged using Git/Hg/whatever. More on that later.
+
+Okay, let's now open the `.u` file and add a definition---we'll paste our factorial function:
+
+```sh
+$ cat a8sdfkjbqwx90.u
+factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
+```
+
+We may wish to add some documentation for this in the `.markdown file`:
+
+```sh
+$ cat a8sdfkjbqwx90.markdown
+The factorial function.
+```
+
+Assuming we're happy with this, we can now add it to our Unison codebase:
+
+```sh
+$ unison add a8sdfkjbqwx90.u
+parsing ... OK
+checking for name ambiguities ... OK
+typechecking ... OK
+parsing documentation .markdown file ... OK
+added to codebase, deleting a8sdfkjbqwx90.{u, markdown}
+
+definition has hash 9Qgdjas9234Dfjs8234jjVSW893jf, use:
+
+  unison edit 9Qgdjas9234Dfjs8234jjVSW893jf
+  unison view 9Qgdjas9234Dfjs8234jjVSW893jf
+  unison docs 9Qgdjas9234Dfjs8234jjVSW893jf
+
+to open this definition for editing, or view the source / docs.
+```
+
+Informative! The files are now gone, and we have a `codebase` directory. Let's have a look inside:
+
+```sh
+$ ls
+codebase
+$ ls codebase
+metadata   definitions
+$ ls definitions
+9Qgdjas9234Dfjs8234jjVSW893jf.json
+```
+
+Yes, that is the hash of the factorial function we just created. The source exists in processed form in the `definitions` directory, as a `.json` file, and there's enough metadata for us to print it back out if requested. Let's try that out:
+
+```sh
+$ unison view 9Qgdjas9234Dfjs8234jjVSW893jf
+factorial : Number -> Number
+factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
+```
+
+Notice the inferred type of `factorial` is also shown here. The type associated with a definition is computed once, when the definition is added, and then associated with that definition's hash. After that, we just lookup the cached type we computed. Thus, we are never parsing and typechecking huge amounts of code sitting in text files; we only run the typechecker on the small amount of code the programmer is actively editing. Incremental typechecking comes for free when your codebase is an immutable data structure!
+
+_Aside:_ type annotations that are redundant won't affect the hash of a term, where a redundant annotation is one that can be elided without altering the inferred type.
+
+How about our docs:
+
+```sh
+$ unison docs 9Qgd # don't need to write out full hash
+The factorial function.
+```
+
+What if we want to edit our function?
+
+```sh
+$ unison edit 9Qgd
+#9Qgdjas9234Dfjs8234jjVSW893jf statistics:
+
+  0 direct dependents
+  0 transitive dependents
+
+created 32bBesWduwQ2.u - edit the code here
+created 32bBesWduwQ2.markdown - edit the docs, usage examples here
+created 32bBesWduwQ2.parent - hash of parent
+```
+
+It tells us some statistics about dependents, which is helpful when trying to get a sense for the scope of an edit or refactoring. And it also generates scratch files of the same form we've seen before. The files are given a fresh GUID, but the content of the files is exactly what we just slurped up into the codebase:
+
+```sh
+$ cat 32bBesWduwQ2.markdown
+The factorial function.
+```
+
+Yup, that's the documentation we added. The definition itself is the same as what `unison view` returned for that hash:
+
+```sh
+$ cat 32bBesWduwQ2.u
+factorial : Number -> Number
+factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
+```
+
+Again, notice that Unison has added the type annotation for us, even though we didn't bother supplying that when we created the definition. I like having the types around and for them to be visible, but when editing I [may or may not want to specify the types first, or at all](http://pchiusano.github.io/2015-10-28/top-down.html).
+
+The `.parent` file just has the hash of the original definition. We won't normally ever modify this file:
+
+```sh
+$ cat 32bBesWduwQ2.parent
+9Qgdjas9234Dfjs8234jjVSW893jf
+```
+
+Let's edit our definition in the `.u` file in a way that affects the hash:
+
+```Haskell
+factorial : Number -> Number
+factorial n =
+  if (n <= 0) 1 (n * factorial (n - 1))
+```
+
+We can delete the type annotation or leave it there; it doesn't matter.
+
+If we try to add this edited definition to the codebase, we are now prompted to resolve a name collision between the two hashes that have the same associated name:
+
+```sh
+$ unison add 32bBesWduwQ2.u
+parsing ... OK
+checking for name ambiguities ...
+
+A definition with hash 9Qgdjas9234Dfjs8234jjVSW893jf
+already has the name 'factorial':
+
+  factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
+
+You can:
+
+1) `rename <newname>` - rename the old definition
+2) `rename` - append first few characters of hash to old name
+3) allow ambiguity (not recommended) - dependents will need to disambiguate via hash
+4) cancel
+
+> 4
+cancelled add
+```
+
+If we want, we can open our file, and rename our new definition to `factorial'`. Then if we do `unison add` again, there's no name ambiguity and the operation completes:
+
+```sh
+$ unison add 32bBesWduwQ2.u
+parsing ... OK
+checking for name ambiguities ... OK
+typechecking ... OK
+parsing documentation .markdown file ... OK
+added to codebase, deleting 32bBesWduwQ2.{u, markdown, parent}
+
+definition has hash A21AAddaeifhasl93xn9sa0fjbwf1, use:
+
+  unison edit A21AAddaeifhasl93xn9sa0fjbwf1
+  unison view A21AAddaeifhasl93xn9sa0fjbwf1
+  unison docs A21AAddaeifhasl93xn9sa0fjbwf1
+
+to open this definition for editing, or view the source / docs.
+```
+
+We could also have chosen to rename the old definition of factorial:
+
+```sh
+You can:
+
+1) `rename <newname>` - rename the old definition
+2) `rename` - append first few characters of hash to old name
+3) allow ambiguity (not recommended) - dependents will need to disambiguate via hash
+4) cancel
+
+> rename factorial-v0
+9Qgdjas9234Dfjs8234jjVSW893jf renamed:
+  factorial => factorial-v0
+
+checking for other name ambiguities ... OK
+typechecking ... OK
+parsing documentation .markdown file ... OK
+added to codebase, deleting 32bBesWduwQ2.{u, markdown, parent}
+
+definition has hash A21AAddaeifhasl93xn9sa0fjbwf1, use:
+
+  unison edit A21AAddaeifhasl93xn9sa0fjbwf1
+  unison view A21AAddaeifhasl93xn9sa0fjbwf1
+  unison docs A21AAddaeifhasl93xn9sa0fjbwf1
+
+to open this definition for editing, or view the source / docs.
+```
+
+With the ambiguity resolved, the operation now completes. The new definition gets the name `factorial` while the old hash gets associated with the name `factorial-v0`. If we did `rename factorial` with no name supplied, Unison would make up a unique name, by appending the first few characters of the hash:
+
+
+```sh
+You can:
+
+1) `rename <newname>` - rename the old definition
+2) `rename` - append first few characters of hash to old name
+3) allow ambiguity (not recommended) - dependents will need to disambiguate via hash
+4) cancel
+
+> rename
+9Qgdjas9234Dfjs8234jjVSW893jf renamed:
+  factorial => factorial#9Qgdj
+
+checking for other name ambiguities ... OK
+typechecking ... OK
+parsing documentation .markdown file ... OK
+added to codebase, deleting 32bBesWduwQ2.{u, markdown, parent}
+
+definition has hash A21AAddaeifhasl93xn9sa0fjbwf1, use:
+
+  unison edit A21AAddaeifhasl93xn9sa0fjbwf1
+  unison view A21AAddaeifhasl93xn9sa0fjbwf1
+  unison docs A21AAddaeifhasl93xn9sa0fjbwf1
+
+to open this definition for editing, or view the source / docs.
+```
+
+Lastly, we can choose to not resolve the ambiguity. Callers of factorial will then be forced to disambiguate. Let's have a look:
+
+```sh
+You can:
+
+1) `rename <newname>` - rename the old definition
+2) `rename` - append first few characters of hash to old name
+3) allow ambiguity (not recommended) - dependents will need to disambiguate via hash
+4) cancel
+
+> 3
+allowing ambiguity
+
+checking for other name ambiguities ... OK
+typechecking ... OK
+parsing documentation .markdown file ... OK
+added to codebase, deleting 32bBesWduwQ2.{u, markdown, parent}
+
+definition has hash A21AAddaeifhasl93xn9sa0fjbwf1, use:
+
+  unison edit A21AAddaeifhasl93xn9sa0fjbwf1
+  unison view A21AAddaeifhasl93xn9sa0fjbwf1
+  unison docs A21AAddaeifhasl93xn9sa0fjbwf1
+
+to open this definition for editing, or view the source / docs.
+
+multiple hashes with same name 'factorial':
+
+  9Qgdjas9234Dfjs8234jjVSW893jf
+  A21AAddaeifhasl93xn9sa0fjbwf1
+
+Use `factorial#9Qgd`, `factorial#A21A` to disambiguate usages.
+```
+
+Any number of characters of the hash may be appened after the `#` to disambiguate a reference to some identifier. When writing a function that depends on `factorial`, the 'checking for name ambiguities' phase will prompt us to resolve which one we want:
+
+```sh
+checking for name ambiguities ...
+
+multiple hashes with same name 'factorial':
+
+  9Qgdjas9234Dfjs8234jjVSW893jf
+  A21AAddaeifhasl93xn9sa0fjbwf1
+
+Use `factorial#9Qgd`, `factorial#A21A` to disambiguate usages.
+
+You can:
+
+1) use factorial#9Qgd
+2) use factorial#A21A
+3) cancel
+
+> 3
+```
+
+You can resolve the ambiguity by altering the source of your definition to pick a particular version of factorial, or you can get rid of the ambiguity by renaming one of the factorial definitions:
+
+```sh
+$ unison rename factorial#9Q factorial-old
+renamed 9Qgdjas9234Dfjs8234jjVSW893jf:
+  factorial => factorial-old
+```
+
+After this rename, any references to 'factorial' are once again unambiguous.
+
+Some other notes:
+
+* Commands like `unison view`, `unison rename`, and so on can be given a hash or a name.
+* Renames are a trivial operation on the Unison codebase; they update the metadata associated with a hash, in a single place.
+
+### Large-scale refactorings
+
+In a larger codebase, you might want to edit a definition with lots of transitive dependents. Suppose it's 6 months later, we've developed a huge codebase, with factorial being used all over the place (yes, I realize this example is silly), and we decide we need to alter its definition:
+
+```sh
+$ unison edit factorial
+#9Qgdjas9234Dfjs8234jjVSW893jf statistics:
+
+  11 direct dependents
+  982 transitive dependents
+
+created FfWBesWduwQe.u - edit the code here
+created FfWBesWduwQe.markdown - edit the docs, usage examples here
+created FfWBesWduwQe.parent - hash of parent
+```
+
+We edit as before, but now when we `add`, we're prompted to (optionally) update dependents as well:
+
+```sh
+$ unison add FfWBesWduwQe.u
+parsing ... OK
+checking for name ambiguities ... OK
+typechecking ... OK
+parsing documentation .markdown file ... OK
+added to codebase, deleting 32bBesWduwQ2.{u, markdown, parent}
+
+definition has hash xR1AAdhaeifhaslbbxnbsa0fIbwcC, use:
+
+  unison edit xR1AAdhaeifhaslbbxnbsa0fIbwcC
+  unison view xR1AAdhaeifhaslbbxnbsa0fIbwcC
+  unison docs xR1AAdhaeifhaslbbxnbsa0fIbwcC
+
+to open this definition for editing, or view the source / docs.
+
+this edit was type-preserving, you can:
+
+1) Propagate to all 982 transitive dependents (will rename old versions)
+2) Open 11 direct dependents for editing
+3) Do nothing
+
+> 1
+updated 982 transitive dependents
+```
+
+If the edit maintains the same type, we can propagate it through our entire codebase, which will just create new definitions that reference the new hash of our updated factorial definition. Note that this doesn't require typechecking any of these dependents---if the types are the same, we know they'll still typecheck! This is an improvement over the typical support for incremental compilation in many languages, where even a type-preserving edit to a function might have to go recompile and retypecheck the 'module' that function lives in, and all modules that depend on that, transitively! (Haskell, for instance, has this behavior.)
+
+If the edit isn't type-preserving, then we have to manually increase the scope of our edit, by visiting immediate dependents and making updates to them, in exactly the same way. Eventually we reach the edge of our codebase (no more dependents), or a place where we're able to preserve the types and can let automatic propagation take over.
+
+While we're doing all this, it's nice to track our progress with some metrics. Here are some ideas:
+
+```sh
+$ unison statistics
+
+There are 14 hashes open currently,
+with 327 transitive dependencies.
+
+Number of transitive dependencies per open hash:
+
+143 - factorial, #92384jasdlkj1lkjasdfAd
+22  - Remote.unfold, #kasjdfkjjHkdsfasdfj99f8c
+...
+```
+
+To summarize:
+
+* In this fashion, we can complete very very large refactorings without ever having to look at a slew of compile errors. Instead, we deal with just getting a single definition to typecheck: the one we are editing! Once we get that working, we can expand the scope of our edits to include immediate dependents, and so on recursively.
+* `unison statistics` gives us a sense of how much more work we have to do to complete a refactoring and can even provide guidance about what definitions to update next! This is a vast improvement over the 'slew of compiler errors' approach to refactoring, where you make a change _in place_, then deal with the slew of errors that results. Which of those errors in that massive list are even valid?? Which ones are the root errors that you should really fix? Which errors, when fixed, will eliminate the most errors? You have no idea, just a big, depressing list of errors to fix. Half the time, you'll fix an error and get MORE errors. I like a codebase that compiles and typechecks and working on a non-compiling codebase is just no fun.
+* We have total control over the scope of the refactoring and can stop upgrading definitions at any point (and pick up the process at any point later). A good usage of this might be to make some updates, then hand off the refactoring to a coworker. More on that in the next section which talks about version control.
+* Notice the amount of work we have to do is _the same or less_ compared to mutating a bag of text files in place.
+* We get extremely good incremental compilation, almost for free. Thus, the editing process is highly responsive. Feedback is immediate. You aren't ever [waiting around for your code to compile or typecheck](https://xkcd.com/303/), since we never have to parse or typecheck a big bag of text files!
+
+So we can make arbitrary edits to our codebase, but in a very controlled fashion. The codebase stays in a compiling state the whole time and we can easily and accurately monitor our progress. We're in control! How nice does that sound?
+
+Here's an analogy: a large codebase is a bit like a skyscraper. Doing a large refactoring by mutating text files in place is a bit like ripping out one of the foundational columns holding up one corner of the skyscraper and trying to swap in another column of a different type. The skyscraper topples over, you have a massive pile of debris, maybe a few floors still intact, some stuff shattered into a million pieces, etc. You then go through that chaos and try to reassemble the skyscraper!
+
+In contrast, doing a large refactoring when your codebase is an immutable data structure is a much nicer experience. You don't modify the old skyscraper in place; instead you put the replacement foundational column in place at a new construction site, then use a magic cloning tool to clone over bits and pieces of the old skyscraper. Your magic cloning tool can do things like 'copy over the top 75 floors of this skyscraper as is; they aren't affected by the replacement of the foundational column'. You do less work, stay in control, and you never have to root around through a pile of debris (a huge list of compiler errors) to decide what to work on next.
+
+### Version control
+
+The command line tool I described above is meant to work nicely with existing version control systems. Your codebase is just a regular repository. You can commit your changes to version control at any point in time, use branches and do merges, host your Unison code on GitHub, etc. There seems to be very little surprising or new about how this plays out---from Git's perspective, a Unison codebase is just like any other bag of text files. The fact that we're manipulating this bag of text files in an usual way (compared to how we usually edit codebases) is not something Git really cares about.
+
+But, there are a couple implications. First is that there are now only two ways to get a merge conflict:
+
+* Alice and Bob pick different names for the same hash. When they merge their repos, there will be a conflict in the `codebase/` directory, for that one file where the metadata associated with that hash is stored. This will just be an ordinary conflict in Git that you'll resolve in the usual way, by picking Alice and/or Bob's name for the hash.
+* Alice and Bob both edit (in a conflicting way) the same scratch file representing a hash open for editing.
+
+What _doesn't_ generate a conflict is if Alice and Bob both pick the same name for two different definitions. That is, suppose Alice creates a function, `merge-sort`, and Bob creates a function he also calls `merge-sort`, but which has a different hash. The merge in `Git` will work just fine. But if we introduce any new definitions and attempt to just say `merge-sort`, Unison will complain that the name is ambiguous and ask us to disambiguate, just like we've seen before. We can then resolve that ambiguity either at the one call site, using a qualified name, or for our whole codebase, by renaming Alice or Bob's version of `merge-sort` to something else. It's really no different than if Alice introduced two things called `merge-sort` in her own codebase, and elected not to resolve the ambiguity when defining the second `merge-sort`.
+
+### Imports
+
+Something that is probably obvious from the above descriptions is that the system coaxes you to pick unique names for your hashes. If you don't, you have to disambiguate at usage sites. Unison doesn't force you to use any particular naming convention, but it seems likely that unique names will be 'qualified' in some way, maybe with 'module' names separated by dots, for instance `List.take` or `Stream.take`. In a very large codebase, perhaps these names get rather long to write out all the time, and it would be nice to have some concept of 'imports'.
+
+We're used to thinking of imports as something that's part of the code. Each file starts of with a set of imports. But imports are really just a parsing directive---they control how we interpret identifiers in the file. There's no real reason they need to be coupled to the code, and it's better if imports can be separated from the code so you don't have to keep repeating the same imports for every file! And since imports can be separated from the code, and are just a parsing directive, you can toss them away once the code is parsed. That is, Alice might write the code with one set of imports, slurp it into the codebase, and Bob might view the code with a different set of imports. When the code is rendered for Bob, the names may look different to him! Since we are separating names
+
+So, a very simple way of telling the command line tool about 'imports' is to create a file like `favs.names`, which looks like:
+
+```
+# hash, name
+factorial#9q2 factorial
+Remote.map mapr
+#asd8FDSFj3j2asdfjasdfVd merge-sort
+...
+```
+
+So we just have two columns. The first column should uniquely identify some hash. The second column is the name we wish to be able to use locally in our edits. The `unison add` command which parses the code and resolves ambiguities might then look for any `.names` files in the current directory and use the contents of these files to resolve identifiers. Or you might supply a path to a `.names` file explicitly as a flag, as in `unison add --names ~/.unison/mathfns.names`.

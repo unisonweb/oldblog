@@ -15,15 +15,15 @@ All right, let's get to it! If you haven't read the [refactoring post][refactori
 
 In Unison, the codebase is an immutable data structure. What does that mean? It means we never modify definitions in place, only introduce new definitions. It's a consequence of the fact that Unison identifies things not by name, but by a hash of their content. 'Modifying' a definition doesn't modify anything; it introduces a new definition, with a new hash. Example: if we 'modify' the definition of 'factorial', we actually create a new function, with a different hash:
 
-```Haskell
+~~~ Haskell
 factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
-```
+~~~
 
 The hash of `factorial` is, say, `#8asdflkjasdf08`. If we 'modify' the definition of `factorial` to be:
 
-```Haskell
+~~~ Haskell
 factorial n = 42
-```
+~~~
 
 We've actually just created a new definition, with a new hash, say `#zuzzzaaaff823`. All the references to `factorial` in our codebase are by hash, not by name, so nothing is initially referencing `#zuzzzaaaff823`. If we want to propagate the change, well, we are actually just creating new definitions, with new hashes, which reference the `#zuzzzaaaff823` hash rather than the original `#8asdflkjasdf08` hash. One can probably see how doing this sort of propagation manually might get a bit tedious. But we won't be doing that!
 
@@ -31,11 +31,11 @@ So we have a somewhat different programming workflow, as we won't just be modify
 
 Let's look at a sample editing session, using a hypothetical command-line tool:
 
-``` text
+~~~ text
 $ mkdir myunisoncode # or whatever you like
 $ cd myunisoncode
 $ ls
-```
+~~~
 
 We start out with an empty directory. Let's create a new definition:
 

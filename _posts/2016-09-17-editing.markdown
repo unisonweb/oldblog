@@ -31,7 +31,7 @@ So we have a somewhat different programming workflow, as we won't just be modify
 
 Let's look at a sample editing session, using a hypothetical command-line tool:
 
-``` sh
+``` text
 $ mkdir myunisoncode # or whatever you like
 $ cd myunisoncode
 $ ls
@@ -39,7 +39,7 @@ $ ls
 
 We start out with an empty directory. Let's create a new definition:
 
-``` sh
+```text
 $ unison new
 created a8sdfkjbqwx90.u - edit the code here
 created a8sdfkjbqwx90.markdown - edit the docs, usage examples here
@@ -49,21 +49,21 @@ The `a8sdfkjbqwx90` is a GUID that the `unison` command line tool conjures up fo
 
 Okay, let's now open the `.u` file and add a definition---we'll paste our factorial function:
 
-```sh
+```text
 $ cat a8sdfkjbqwx90.u
 factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
 ```
 
 We may wish to add some documentation for this in the `.markdown file`:
 
-```sh
+```text
 $ cat a8sdfkjbqwx90.markdown
 The factorial function.
 ```
 
 Assuming we're happy with this, we can now add it to our Unison codebase:
 
-```sh
+```text
 $ unison add a8sdfkjbqwx90.u
 parsing ... OK
 checking for name ambiguities ... OK
@@ -82,7 +82,7 @@ to open this definition for editing, or view the source / docs.
 
 Informative! The files are now gone, and we have a `codebase` directory. Let's have a look inside:
 
-```sh
+```text
 $ ls
 codebase
 $ ls codebase
@@ -93,7 +93,7 @@ $ ls definitions
 
 Yes, that is the hash of the factorial function we just created. The source exists in processed form in the `definitions` directory, as a `.json` file, and there's enough metadata for us to print it back out if requested. Let's try that out:
 
-```sh
+```text
 $ unison view 9Qgdjas9234Dfjs8234jjVSW893jf
 factorial : Number -> Number
 factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
@@ -105,14 +105,14 @@ _Aside:_ type annotations that are redundant won't affect the hash of a term, wh
 
 How about our docs:
 
-```sh
+```text
 $ unison docs 9Qgd # don't need to write out full hash
 The factorial function.
 ```
 
 What if we want to edit our function?
 
-```sh
+```text
 $ unison edit 9Qgd
 #9Qgdjas9234Dfjs8234jjVSW893jf statistics:
 
@@ -126,14 +126,14 @@ created 32bBesWduwQ2.parent - hash of parent
 
 It tells us some statistics about dependents, which is helpful when trying to get a sense for the scope of an edit or refactoring. And it also generates scratch files of the same form we've seen before. The files are given a fresh GUID, but the content of the files is exactly what we just slurped up into the codebase:
 
-```sh
+```text
 $ cat 32bBesWduwQ2.markdown
 The factorial function.
 ```
 
 Yup, that's the documentation we added. The definition itself is the same as what `unison view` returned for that hash:
 
-```sh
+```text
 $ cat 32bBesWduwQ2.u
 factorial : Number -> Number
 factorial n = Vector.fold-left 1 (*) (Vector.range 1 (n + 1))
@@ -143,7 +143,7 @@ Again, notice that Unison has added the type annotation for us, even though we d
 
 The `.parent` file just has the hash of the original definition. We won't normally ever modify this file:
 
-```sh
+```text
 $ cat 32bBesWduwQ2.parent
 9Qgdjas9234Dfjs8234jjVSW893jf
 ```
@@ -160,7 +160,7 @@ We can delete the type annotation or leave it there; it doesn't matter.
 
 If we try to add this edited definition to the codebase, we are now prompted to resolve a name collision between the two hashes that have the same associated name:
 
-```sh
+```text
 $ unison add 32bBesWduwQ2.u
 parsing ... OK
 checking for name ambiguities ...
@@ -183,7 +183,7 @@ cancelled add
 
 If we want, we can open our file, and rename our new definition to `factorial'`. Then if we do `unison add` again, there's no name ambiguity and the operation completes:
 
-```sh
+```text
 $ unison add 32bBesWduwQ2.u
 parsing ... OK
 checking for name ambiguities ... OK
@@ -202,7 +202,7 @@ to open this definition for editing, or view the source / docs.
 
 We could also have chosen to rename the old definition of factorial:
 
-```sh
+```text
 You can:
 
 1) `rename <newname>` - rename the old definition
@@ -228,10 +228,9 @@ definition has hash A21AAddaeifhasl93xn9sa0fjbwf1, use:
 to open this definition for editing, or view the source / docs.
 ```
 
-With the ambiguity resolved, the operation now completes. The new definition gets the name `factorial` while the old hash gets associated with the name `factorial-v0`. If we did `rename factorial` with no name supplied, Unison would make up a unique name, by appending the first few characters of the hash:
+With the ambiguity resolved, the operation now completes. The new definition gets the name `factorial` while the old hash gets associated with the name `factorial-v0`. If we did `rename` with no name supplied, Unison would make up a unique name, by appending the first few characters of the hash:
 
-
-```sh
+```text
 You can:
 
 1) `rename <newname>` - rename the old definition
@@ -259,7 +258,7 @@ to open this definition for editing, or view the source / docs.
 
 Lastly, we can choose to not resolve the ambiguity. Callers of factorial will then be forced to disambiguate. Let's have a look:
 
-```sh
+```text
 You can:
 
 1) `rename <newname>` - rename the old definition
@@ -293,7 +292,7 @@ Use `factorial#9Qgd`, `factorial#A21A` to disambiguate usages.
 
 Any number of characters of the hash may be appened after the `#` to disambiguate a reference to some identifier. When writing a function that depends on `factorial`, the 'checking for name ambiguities' phase will prompt us to resolve which one we want:
 
-```sh
+```text
 checking for name ambiguities ...
 
 multiple hashes with same name 'factorial':
@@ -331,7 +330,7 @@ Some other notes:
 
 In a larger codebase, you might want to edit a definition with lots of transitive dependents. Suppose it's 6 months later, we've developed a huge codebase, with factorial being used all over the place (yes, I realize this example is silly), and we decide we need to alter its definition:
 
-```sh
+```text
 $ unison edit factorial
 #9Qgdjas9234Dfjs8234jjVSW893jf statistics:
 
@@ -345,7 +344,7 @@ created FfWBesWduwQe.parent - hash of parent
 
 We edit as before, but now when we `add`, we're prompted to (optionally) update dependents as well:
 
-```sh
+```text
 $ unison add FfWBesWduwQe.u
 parsing ... OK
 checking for name ambiguities ... OK
@@ -377,7 +376,7 @@ If the edit isn't type-preserving, then we have to manually increase the scope o
 
 While we're doing all this, it's nice to track our progress with some metrics. Here are some ideas:
 
-```sh
+```text
 $ unison statistics
 
 There are 14 hashes open currently,
@@ -423,7 +422,7 @@ We're used to thinking of imports as something that's part of the code. Each fil
 
 So, a very simple way of telling the command line tool about 'imports' is to create a file like `favs.names`, which looks like:
 
-```
+```text
 # hash, name
 factorial#9q2 factorial
 Remote.map mapr

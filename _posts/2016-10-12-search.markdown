@@ -7,7 +7,7 @@ post_author: Paul Chiusano
 
 At [Full Stack Fest](https://2016.fullstackfest.com/), I gave a talk on how to use Unison's distributed programming API to write a simple search engine that runs on multiple nodes:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/f6yA3t0dO-k" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" style="margin-left: auto; margin-right: auto;" src="https://www.youtube.com/embed/f6yA3t0dO-k" frameborder="0" allowfullscreen></iframe>
 
 <br/>
 I didn't have all the code working at the time I gave the talk, but promised it would be done Any Day Now™. Well, now after another few weeks of hacking, I have something running. [This ~ 125 LOC file](https://github.com/unisonweb/unison/blob/master/unison-src/searchengine.u) defines:

@@ -1,0 +1,74 @@
+---
+layout: post
+categories: [updates]
+title: A search engine in 15 LOC, actually running now!
+post_author: Paul Chiusano
+---
+
+At [Full Stack Fest](https://2016.fullstackfest.com/), I gave a talk on how to use Unison's distributed programming API to write a simple search engine that runs on multiple nodes:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/f6yA3t0dO-k" frameborder="0" allowfullscreen></iframe>
+
+I didn't have all the code working at the time I gave the talk, but promised it would be done Any Day Now™. Well, now after another few weeks of hacking, I have something running. [This ~ 125 LOC file](https://github.com/unisonweb/unison/blob/master/unison-src/searchengine.u) defines:
+
+* The logic for the search (this is the part that's the 'advertised' 15 LOC)
+* A simple web crawler which populates the index used by the search
+* The logic to provision nodes for backing the index and the crawling state
+* An example search query
+* Formatting of search results
+
+### Demo
+
+When I run this program, it actually works. Here's the output:
+
+```text
+waiting 2 minutes for indexing before issuing queries...: ()
+indexing url: "http://unisonweb.org/design"
+indexing url: "http://lambda-the-ultimate.org/"
+indexing url: "http://www.cnn.com"
+finished indexing: "http://unisonweb.org/design"
+indexing url: "http://unisonweb.org/"
+finished indexing: "http://www.cnn.com"
+...
+```
+
+A bunch of pages get indexed, and then two minutes later, the query 
+
+```Haskell
+search 10 ["design", "unison", "programming"] ind
+```
+
+gets run and the results formatted:
+
+```text
+http://www.zazzle.com/unisonweb/products
+Unison programming platform merchandise: Products on Zazzle Home Shop Create Sell Gifts My Account My Likes Collections Saved Designs Sign in » Shopping Cart (0 items) View Cart (0 items) 100% Satisfaction Guaranteed Shop Create Sell Gifts Shopping Cart (0 items) View Cart (0 items) 100% Satisfaction Guaranteed A community marketplace where you can collaborate with makers & designers to make almos...
+***
+http://unisonweb.org/design
+Posts tagged 'design' Unison next-generation programming platform, currently in development about help fund the project swag Twitter . GitHub . RSS Posts tagged 'design' [ RSS ] These posts are design writeups for aspects of the Unison platform. The Unison codebase editing experience using plain-text tools Node containers and lightweight, zero-copy node provisioning Shared node storage and more ef...
+***
+http://unisonweb.org/
+Unison next-generation programming platform, currently in development about help fund the project swag Twitter . GitHub . RSS The Unison codebase editing experience using plain-text tools There are huge benefits to modeling the codebase as an immutable data structure, rather than a bag of text files that’s mutated in place. This post talks about these benefits while walking through a design for ho...
+***
+```
+
+Nice! (Notice only 3 results---the crawling didn't get very far in 2 minutes, maybe will try running it overnight sometime...)
+
+### Disclaimers
+
+This search engine is a proof of concept. It exercises a lot and shows what is possible, and it's great that we've gotten this far. But, here are some ways in which this proof of concept is _not yet realistic_: 
+
+* [The implementation of `DIndex`](https://github.com/unisonweb/unison/blob/master/unison-src/dindex.u) is too naive in various ways, and I doubt it would scale up to very large clusters---among other things, it needs to maintain the cluster state (the directory of nodes) in a decentralized fashion (Raft, Paxos), and it should probably implement the ['skeleton' variant for speeding up HRW hashing in large clusters](https://en.wikipedia.org/wiki/Rendezvous_hashing#Skeleton-based_variant_for_very_large_n). And that's great! Raft consensus can be an ordinary Unison _library_, used by `DIndex` and whatever other distributed data structures.
+* The Unison runtime currently uses an extremely slow, naive interpreter. It takes a few _seconds_ to index each page! At that rate, the sun will become a red giant before this finishes indexing the web... but this is 'easy' to solve and is just typical language engineering work.
+* The nodes being provisioned are all local nodes, running in the same node container. Obviously we'd like to provision nodes running on other computers, or provision from a managed cloud service (like [unison.cloud](http://prelaunch.unison.cloud), coming soon) and/or a P2P mesh of nodes.
+* The search engine itself is very simplistic. There's no fancy ranking of results (like PageRank or any of Google's other 200 ranking factors that they've tuned), no fancy representation of keywords (like [word vectors](https://blog.acolyer.org/2016/04/21/the-amazing-power-of-word-vectors/)), no fancy processing of the text of each page (using something like [TextRank](https://en.wikipedia.org/wiki/Automatic_summarization)), etc... 
+* There's no maintanance or monitoring hooks builtin into our program. It's a batch program that's run once and does everything---provisioning, deployment, etc.   
+* And more...
+
+On the one hand, it's lovely being able to use a single general purpose, typed programming language to describe all relevant aspects of building a software system. You don't need to cobble together [15 different technologies](http://slides.com/pchiusano/unison-fsf-2016#/8) just to build a multi-node software system! On the other hand, our programming tech is no longer _enforcing_ and separation of concerns (the Unison language can talk about provisioning and deployment, so nothing stops you from intermingling these concerns in ad hoc ways with stuff like your 'business logic' that should be decoupled). Thus, we actually need to start thinking about how to carve things up and make it maintainable, upgradable, easy to monitor, and so on. This is probably the most 'interesting' problem (from Unison's perspective): how do we build a highly available distributed Unison service _and upgrade / maintain it over time_? 
+
+However, I view this as a good problem to have---you aren't _forced_ by your programming tech into any particular decomposition of your system into a rigid set of phases, each managed by special-purpose tools. Instead, you can think about what decomposition makes the most sense _for your use cases_. And any common patterns you discover can be packaged up as _regular Unison libraries and functions_ and reused!
+
+### What's next?
+
+[This GitHub meta-issue](https://github.com/unisonweb/unison/issues/101) tracks upcomming work on the project, and you can also check out [the project board](https://github.com/unisonweb/unison/projects/1). But to summarize, the project is moving out of an R&D phase and will be focused on the known engineering work to make this a language you can use for real stuff!

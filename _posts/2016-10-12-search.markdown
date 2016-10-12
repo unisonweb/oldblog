@@ -11,7 +11,7 @@ At [Full Stack Fest](https://2016.fullstackfest.com/), I gave a talk on how to u
 
 I didn't have all the code working at the time I gave the talk, but promised it would be done Any Day Now™. Well, now after another few weeks of hacking, I have something running. [This ~ 125 LOC file](https://github.com/unisonweb/unison/blob/master/unison-src/searchengine.u) defines:
 
-* The logic for the search (this is the part that's the 'advertised' 15 LOC)
+* The logic for the search (this is the part that's [the 'advertised' 15 LOC](https://github.com/unisonweb/unison/blob/master/unison-src/searchengine.u#L14-L25))
 * A simple web crawler which populates the index used by the search
 * The logic to provision nodes for backing the index and the crawling state
 * An example search query

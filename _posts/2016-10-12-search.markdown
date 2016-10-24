@@ -35,9 +35,9 @@ finished indexing: "http://www.cnn.com"
 
 A bunch of pages get indexed, and then two minutes later, the query 
 
-~~~ Haskell
+```haskell
 search 10 ["design", "unison", "programming"] ind
-~~~
+```
 
 gets run and the results formatted:
 

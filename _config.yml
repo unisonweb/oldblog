@@ -2,10 +2,7 @@ name: Unison
 url: http://unisonweb.org
 
 permalink: /:year-:month-:day/:title.html
-markdown: kramdown
-kramdown:
-  input: GFM
-  fenced_code_blocks: true
+highlighter: rouge
 
 paginate_path: "/posts/page:num"
 paginate: 5

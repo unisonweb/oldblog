@@ -1,0 +1,23 @@
+---
+layout: post
+title: Update and what's next
+categories: [updates]
+post_author: Paul Chiusano
+---
+
+Hi folks, apologies for the long radio silence, we (myself, Rúnar Bjarnason and Arya Irani) have been heads down actually implementing stuff and I have some progress updates to share! Also, we are going to start posting more frequent updates from here on out (at least twice per month).
+
+Okay, here's what's up:
+
+* Overall, plan is to get a preview version of Unison out sometime before the end of the year. (And ideally, more like sometime in the Sept-Nov range). This is going to include the core Unison language, runtime, and libraries and a command line tool for building, running, refactoring and publishing Unison code (the command line tool will probably just be called "unison" and will be the main way you interact with the language). The Unison semantic editor is still on the long-term plan, but it needs more research and we didn't want it to be a bottleneck for getting a usable version of Unison out the door.
+* One thing that will be missing from the preview version is an actually distributed implementation of the Unison `Remote` API. Instead we will shoot for having a version of `Remote` that evaluates computations locally, simulating a whole distributed system on one computer. This is a pretty nice feature for testing, but it also means you can start writing distributed programming libraries and such even before we have distributed execution. Tentative plan is to have that ready by Spring 2019 along with more library support and lots of polish, at which point, I'd consider Unison a real language, which you might boldly use for a new project. :)
+
+Here's what we've been working on:
+
+* We finished an initial version of the Unison runtime. It uses the [compilation via partial evaluation technique](http://unisonweb.org/2017-10-13/scala-world.html#post-start) I presented on at Scala World last year. After getting more experience with this technique, I'm not sure we'll stick with it long term - the performance is a bit too fragile, depends a lot on the whims of JVM inlining (sometimes it's great, you get within some small constant factors of regular imperative Java, but then other times it's hugely slower). So I wouldn't expect mindblowing performance for this preview version of Unison. We've toyed a bit with the idea of producing an LLVM or Truffle & Graal backend for Unison but don't have the resources for that right now (if you think you might want to help on this front let us know). This is something we can always improve on later.
+* We also finished an initial version of the Unison parser and typechecker. The language implements a variation of [Frank-style algebraic effects](https://arxiv.org/pdf/1611.09259.pdf), a nice piece of work by Conor McBride et al. We'll have to do a writeup in a separate post, but the general idea is that you can mix pure and effectful code without the monadic plumbing required in other functional languages. I think this makes the language a lot more usable.
+* Still to do: lots of polish (like at the moment we are reworking the parser and typechecker to be able to report nice error messages) and the Unison command line tool.
+
+Also, wanted to give a shoutout to [Neel Krishnaswami](http://semantic-domain.blogspot.com/) who has been patient in answering various type system questions that have come up while working on Unison.
+
+That's all for now, look forward to sharing more updates as we go!

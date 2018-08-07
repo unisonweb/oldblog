@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Development update: new parser, better errors
+title: New parser, better errors
 categories: [updates]
 post_author: Rúnar Bjarnason
 ---

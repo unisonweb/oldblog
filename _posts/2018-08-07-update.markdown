@@ -1,0 +1,38 @@
+---
+layout: post
+title: Development update: new parser, better errors
+categories: [updates]
+post_author: Rúnar Bjarnason
+---
+
+Hey folks, Rúnar here. I just wanted to give a quick update on our progress over the past couple of weeks. We're hard at work getting Unison towards a preview release. Here are some highlights:
+
+* We ported the Unison parser from [Parsec](http://hackage.haskell.org/package/parsec) to [Megaparsec](http://hackage.haskell.org/package/megaparsec). In doing so, we turned parser errors from simple strings to [something much more structured](https://github.com/unisonweb/unison/blob/f20ad4dda6128ea550164574a438a3ce86aae6c5/parser-typechecker/src/Unison/Parser.hs#L70). We also now have a [lexer that handles layout and whitespace](https://github.com/unisonweb/unison/blob/f20ad4dda6128ea550164574a438a3ce86aae6c5/parser-typechecker/src/Unison/Lexer.hs), which significantly cleans up the Unison parser.
+* We also turned type errors into a structured data type, which hopefully will let us give more helpful type errors to programmers than most languages give. We keep the whole trace of the typer, so in the future we should be able to let you explore interactively the terms involved in type errors, rather than just giving a static textual error.
+* Type errors are now rendered in glorious colour! Look at it!
+
+![lookit](/resources/UnisonError.png)
+
+* Speaking of type errors, we've implemented [type error provinance](https://www.youtube.com/watch?v=rdVqQUOvxSU) so we can point to the source locations associated with the type errors. We can do this because the whole binding tree for both types and terms is now annotated with the source locations.
+* We also made a whole bunch of little language tweaks and syntax updates, including quotations for delayed computations, namespace blocks, and import statements (via the `use` keyword). [Details are in the pull request](https://github.com/unisonweb/unison/pull/222).
+
+So that's what we have been doing. Here's what we're up to right now:
+
+### Type-directed name resolution
+
+Unison will disambiguate overloaded names based on the expected type at the usage site. When there are multiple things in scope with the same name and you use that name unqualified, Unison will try to figure out which one you meant. If only one of the options typechecks, Unison will just use that one. If more than one typechecks, it will ask you to disambiguate. This mechanism incidentally gives us [typed holes](https://wiki.haskell.org/GHC/Typed_holes) for free.
+
+
+### Improved error messages
+
+After changing the way type errors are represented, there's still a bit of work remaning to render those errors nicely to the programmer. We feel that this is really important to the overall developer experience, so we're trying to be thoughtful about how we present errors.
+
+Programming languages generally give _really terrible_ error messages, and we want Unison's errors to read more like a human explaining to you what went wrong, hopefully illuminating the steps you have to take to correct the program. We want to shed the cultural baggage that's reminiscent of when computers only had one kilobyte of memory and a robotic "SYNTAX ERROR LINE 20" was basically the best you could hope for. In providing feedback to the programmer, languages have not come a very long way since the 1980s. Anyway, it's time to fix that.
+
+### Effect inference
+
+We have implemented Algebraic Effects based on the [Frank language](https://github.com/frank-lang/frank). But Frank expressly doesn't have _effect inference_. That is, it has type inference, but it will never infer an effect as part of a type, so you have to give type annotations whenever you want a function to be effectful. We've found that this isn't very ergonomic for the programmer, so we're currently trying to implement an algorithm for inferring effect types.
+
+
+That's all for now. We'll have more updates for you in a couple of weeks.
+

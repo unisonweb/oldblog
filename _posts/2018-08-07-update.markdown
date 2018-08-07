@@ -13,7 +13,7 @@ Hey folks, Rúnar here. I just wanted to give a quick update on our progress ove
 
 ![lookit](/resources/UnisonError.png)
 
-* Speaking of type errors, we've implemented [type error provinance](https://www.youtube.com/watch?v=rdVqQUOvxSU) so we can point to the source locations associated with the type errors. We can do this because the whole binding tree for both types and terms is now annotated with the source locations.
+* Speaking of type errors, we've implemented [type error provenance](https://www.youtube.com/watch?v=rdVqQUOvxSU) so we can point to the source locations associated with the type errors. We can do this because the whole binding tree for both types and terms is now annotated with the source locations.
 * We also made a whole bunch of little language tweaks and syntax updates, including quotations for delayed computations, namespace blocks, and import statements (via the `use` keyword). [Details are in the pull request](https://github.com/unisonweb/unison/pull/222).
 
 So that's what we have been doing. Here's what we're up to right now:

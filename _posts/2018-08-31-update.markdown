@@ -1,54 +1,97 @@
 ---
 layout: post
-title: New parser, better errors
+title: typechecking, typechecking, and typechecking output
 categories: [updates]
 post_author: Arya Irani
 ---
 
-Hi, it's Arya.  Here's where we're at with type-directed name resolution, error messaging, and effect inference, along with an updated short-term plan:
+Hi, it's Arya.  We've been crunching away and here's what's new:
 
 ### Type-directed name resolution
 
-Type-directed name resolution now lets us reference builtin functions unqualified, like:
+We've implemented type-directed name resolution (TDNR), so if your program references an unbound, unqualified identifier, Unison will look at how it's being used, and search among the built-in functions for a qualified identifier whose type matches your usage.  In other words, this program
 
 ```haskell
 left = take 3 (from-uint64 5)
 right = take 10 (from-uint64 100)
 sum = reduce 0 (+)
+
 sum (append left right)
-
-Sequence.iterate : a -> UInt64 -> (a -> a) -> Sequence a
-Sequence.iterate a n f =
-  iterate0 a n f acc =
-    if n > 0 then
-      a' = f a
-      iterate0 a' (n `drop` 1) f (snoc acc a')
-    else acc
-  iterate0 a n f []
-left2 = take 3 [5,6,7,8,9,10]
-right2 = take 10 (from-uint64 100)
-
-
-
 ```
+
+will typecheck as this one:
+
+```haskell
+left = Stream.take 3 (Stream.from-uint64 5)
+right = Stream.take 10 (Stream.from-uint64 100)
+sum = Stream.reduce 0 (UInt64.+)
+
+sum (Stream.append left right)
+```
+
+If you're concerned that this will encourage developers to write code with poor readability, don't worry: the source code effectively goes away once it typechecks successfully.  Within the codebase, these references are simply stored as content-based hashes or fully-qualified builtins. When it comes time to review and comprehend existing code, it can be rendered according to your preferences: using fully-qualified names in the default case, or using user- or project-specific aliases as you like.
+
+Like Rúnar mentioned [last time](/2018-08-07/update.html), TDNR also gives us typed holes for free:
+![I don't know what "apend" means.](/Resources/UnisonError-i-dunno-what-apend-means.png)
 
 ### Improved error messages
 
-There is still plenty of work to be done, but we've begun carving up the space of possible typechecking errors into (a bunch of special cases)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/Typechecker/TypeError.hs#L26-L74] to be rendered (in a more helpful way)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/PrintError.hs#L184-L218].
+There is still plenty of work to be done, but we've begun carving up the space of possible type-checking errors into (a number of special cases)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/Typechecker/TypeError.hs#L26-L74] to be rendered (in a more helpful way)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/PrintError.hs#L184-L218].  This may not seem ground-breaking yet, but the ultimate goal is to have error messages that explain the problem about as well as a human could, so developers don't have to duplicate the all of the typechecker's work before they can spot the issue and get unblocked.
 
-![Mismatched case body types](/resources/UnisonError-casebody.png)
+For example:
+![Mismatched case body types.](/resources/UnisonError-casebody.png)
 
+and:
 ![Not a function call.](/resources/UnisonError-not-a-function.png)
 
-<!-- screenshot for app-polymorphic.u, but with fewer arguments -->
+and:
+![Mismatched relative to solved type parameter.](/resources/UnisonError-app-polymorphic.png)
 
-### Effect inference
+### ~~Effect~~ Ability inference
+
+Last time, we had implemented Algebraic Effects based on the [Frank language](https://github.com/frank-lang/frank).  Frank requires that functions with effects be described in an explicit type signature, but we're trying to make these signatures optional, and it's coming along!
+
+As a side note, we've realized it's more intuitive to talk about functions requiring or using *abilities* at runtime than to talk about them producing or having *effects*, so bear with us during this transition in terminology!  We'll update the `effect` definition keyword to `ability` soon as well.
+
+Unison functions may use or require various abilities, such as the `Remote` ability to transfer computations between Unison nodes, abilities of specific hardware devices like GPUs or biometric sensors, and other user-defined abilities.  The typechecker will track the use of abilities within a function, to make sure that they are only used within an environment which provides them.
+
+Moreover, in this definition
+```haskell
+type List a = Nil | Cons a (List a)
+
+map f as = case as of
+  List.Nil -> List.Nil
+  List.Cons h t -> List.Cons (f h) (map f t)
+```
+`map` is inferred as:
+```haskell
+map : ∀ a b e . (a -> {e} b) -> List a -> {e} List b
+```
+because the typechecker sees that any abilities required by `f` to convert an `a` to a `b` will be required to *use* `f` to convert a `List a` to a `List b`.
+
+```haskell
+ex = List.fromSequence [1,2,3]
+
+-- map works for e={}
+pureResult : List Text
+pureResult = map (a -> "hello") ex
+
+-- as well as e={Noop}
+effect Noop where
+  noop : a -> {Noop} a
+
+oneEffect : '{Noop} (List UInt64)
+oneEffect = '(map (zap -> (Noop.noop (zap + 1))) ex)
+
+-- mixing multiple effects in a call to `map` works fine too.
+effect Noop2 where
+  noop2 : a -> a -> {Noop2} a
+
+twoEfffects : '{Noop, Noop2} (List UInt64)
+twoEfffects = '(map (zap -> Noop.noop (zap + Noop2.noop2 2 7)) ex)
+```
+
+Note, `'foo` is syntax sugar for `() -> foo` in both types and terms.
 
 ### Up next
-
-### Thank yous
-Thanks
-
-* Effect inference
-* Type directed name resolution
-* PRs by @timciver and @atacratic
+There's unfortunately plenty of work remaining and bugs to be squashed around these features to keep us busy for the next couple weeks.  Once they're under control, we'll be planning and implementing out some additional builtin functions needed in order to use the Unison language to start developing the Unison codebase editor.  That's when things should really start getting fun...

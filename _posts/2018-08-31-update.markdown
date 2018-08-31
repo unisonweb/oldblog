@@ -32,7 +32,7 @@ sum (Stream.append left right)
 If you're concerned that this will encourage developers to write code with poor readability, don't worry: the source code effectively goes away once it typechecks successfully.  Within the codebase, these references are simply stored as content-based hashes or fully-qualified builtins. When it comes time to review and comprehend existing code, it can be rendered according to your preferences: using fully-qualified names in the default case, or using user- or project-specific aliases as you like.
 
 Like Rúnar mentioned [last time](/2018-08-07/update.html), TDNR also gives us typed holes for free:
-![I don't know what "apend" means.](/Resources/UnisonError-i-dunno-what-apend-means.png)
+![I don't know what "apend" means.](/resources/UnisonError-i-dunno-what-apend-means.png)
 
 ### Improved error messages
 

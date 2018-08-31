@@ -1,0 +1,54 @@
+---
+layout: post
+title: New parser, better errors
+categories: [updates]
+post_author: Arya Irani
+---
+
+Hi, it's Arya.  Here's where we're at with type-directed name resolution, error messaging, and effect inference, along with an updated short-term plan:
+
+### Type-directed name resolution
+
+Type-directed name resolution now lets us reference builtin functions unqualified, like:
+
+```haskell
+left = take 3 (from-uint64 5)
+right = take 10 (from-uint64 100)
+sum = reduce 0 (+)
+sum (append left right)
+
+Sequence.iterate : a -> UInt64 -> (a -> a) -> Sequence a
+Sequence.iterate a n f =
+  iterate0 a n f acc =
+    if n > 0 then
+      a' = f a
+      iterate0 a' (n `drop` 1) f (snoc acc a')
+    else acc
+  iterate0 a n f []
+left2 = take 3 [5,6,7,8,9,10]
+right2 = take 10 (from-uint64 100)
+
+
+
+```
+
+### Improved error messages
+
+There is still plenty of work to be done, but we've begun carving up the space of possible typechecking errors into (a bunch of special cases)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/Typechecker/TypeError.hs#L26-L74] to be rendered (in a more helpful way)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/PrintError.hs#L184-L218].
+
+![Mismatched case body types](/resources/UnisonError-casebody.png)
+
+![Not a function call.](/resources/UnisonError-not-a-function.png)
+
+<!-- screenshot for app-polymorphic.u, but with fewer arguments -->
+
+### Effect inference
+
+### Up next
+
+### Thank yous
+Thanks
+
+* Effect inference
+* Type directed name resolution
+* PRs by @timciver and @atacratic

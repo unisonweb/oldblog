@@ -69,7 +69,7 @@ map f as = case as of
 ```
 `map` is inferred as:
 ```haskell
-map : ∀ a b e . (a -> {e} b) -> List a -> {e} List b
+map : forall a b e . (a -> {e} b) -> List a -> {e} List b
 ```
 because the typechecker sees that any abilities required by `f` to convert an `a` to a `b` will be required to *use* `f` to convert a `List a` to a `List b`.
 

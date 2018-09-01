@@ -9,7 +9,7 @@ Hi, it's Arya.  We've been crunching away and here's what's new:
 
 ### Type-directed name resolution
 
-We've implemented type-directed name resolution (TDNR), so if your program references an unbound, unqualified identifier, Unison will look at how it's being used, and search among the built-in functions for a qualified identifier whose type matches your usage.  In other words, this program
+We've implemented type-directed name resolution (TDNR), so if your program references an unbound, unqualified identifier, Unison will look at how it's being used, and search among the built-in functions for a qualified identifier whose type matches your usage.  In other words, this program:
 
 ```haskell
 left = take 3 (from-uint64 5)
@@ -32,19 +32,23 @@ sum (Stream.append left right)
 If you're concerned that this will encourage developers to write code with poor readability, don't worry: the source code effectively goes away once it typechecks successfully.  Within the codebase, these references are simply stored as content-based hashes or fully-qualified builtins. When it comes time to review and comprehend existing code, it can be rendered according to your preferences: using fully-qualified names in the default case, or using user- or project-specific aliases as you like.
 
 Like Rúnar mentioned [last time](/2018-08-07/update.html), TDNR also gives us typed holes for free:
+
 ![I don't know what "apend" means.](/resources/UnisonError-i-dunno-what-apend-means.png)
 
 ### Improved error messages
 
-There is still plenty of work to be done, but we've begun carving up the space of possible type-checking errors into (a number of special cases)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/Typechecker/TypeError.hs#L26-L74] to be rendered (in a more helpful way)[https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/PrintError.hs#L184-L218].  This may not seem ground-breaking yet, but the ultimate goal is to have error messages that explain the problem about as well as a human could, so developers don't have to duplicate the all of the typechecker's work before they can spot the issue and get unblocked.
+There is still plenty of work to be done, but we've begun carving up the space of possible type-checking errors into [a number of special cases](https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/Typechecker/TypeError.hs#L26-L74) to be rendered [in a more helpful way](https://github.com/unisonweb/unison/blob/20c39ce084f1c60f34eb18ee29fb322d35c9dc99/parser-typechecker/src/Unison/PrintError.hs#L184-L218).  This may not seem ground-breaking yet, but the ultimate goal is to have error messages that explain the problem about as well as a human could, so developers don't have to duplicate the all of the typechecker's work before they can spot the issue and get unblocked.
 
 For example:
+
 ![Mismatched case body types.](/resources/UnisonError-casebody.png)
 
 and:
+
 ![Not a function call.](/resources/UnisonError-not-a-function.png)
 
 and:
+
 ![Mismatched relative to solved type parameter.](/resources/UnisonError-app-polymorphic.png)
 
 ### ~~Effect~~ Ability inference
@@ -53,7 +57,7 @@ Last time, we had implemented Algebraic Effects based on the [Frank language](ht
 
 As a side note, we've realized it's more intuitive to talk about functions requiring or using *abilities* at runtime than to talk about them producing or having *effects*, so bear with us during this transition in terminology!  We'll update the `effect` definition keyword to `ability` soon as well.
 
-Unison functions may use or require various abilities, such as the `Remote` ability to transfer computations between Unison nodes, abilities of specific hardware devices like GPUs or biometric sensors, and other user-defined abilities.  The typechecker will track the use of abilities within a function, to make sure that they are only used within an environment which provides them.
+Unison functions may use or require various abilities, such as the `Remote` ability to transfer computations between Unison nodes, abilities of specific hardware devices like GPUs or biometric sensors, and other user-defined abilities.  The typechecker will track the use of abilities within a function, to make sure that they are only used within an environment which provides them. (Or at least simulates them!)
 
 Moreover, in this definition
 ```haskell
@@ -94,4 +98,4 @@ twoEfffects = '(map (zap -> Noop.noop (zap + Noop2.noop2 2 7)) ex)
 Note, `'foo` is syntax sugar for `() -> foo` in both types and terms.
 
 ### Up next
-There's unfortunately plenty of work remaining and bugs to be squashed around these features to keep us busy for the next couple weeks.  Once they're under control, we'll be planning and implementing out some additional builtin functions needed in order to use the Unison language to start developing the Unison codebase editor.  That's when things should really start getting fun...
+There's unfortunately plenty of work remaining and bugs to be squashed around these features to keep us busy for the next couple weeks.  Once they're under control, we'll be planning and implementing out some additional builtin functions needed in order to use the Unison language to start developing the Unison codebase editor.  That's when things should really start getting fun.

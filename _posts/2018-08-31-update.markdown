@@ -73,7 +73,7 @@ map : ∀ a b e . (a -> {e} b) -> List a -> {e} List b
 ```
 because the typechecker sees that any abilities required by `f` to convert an `a` to a `b` will be required to *use* `f` to convert a `List a` to a `List b`.
 
-```haskell
+```
 ex = List.fromSequence [1,2,3]
 
 -- map works for e={}

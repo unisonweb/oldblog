@@ -5,100 +5,28 @@ title: About
 post_author: Paul Chiusano
 ---
 
-_Last updated: March 2016_
-
-Unison is a new programming platform that rethinks just about every aspect of the programming experience. This page shows a little bit of what's possible (or will be possible soon) with Unison. We'll start with the editor, which _has_ to work differently given Unison's simplified approach to building distributed systems and dealing with persistence. (More on that later!)
-
-Unison programs are edited in a _semantic editor_. Interactions in this editor are highly structured---we get rich guidance from the typechecker and are prevented from making various silly mistakes that are possible when plain-text editing. Let's have a look. Here we have an editor session, displaying just a single expression, a bit of text, which we'll edit:
-
-<video width="100%" height="auto" controls="true"><source src="videos/editing-text.mp4" type="video/mp4"></video>
-
-In this video, we replaced the selection with a new piece of text. Notice the editor knows the type of what we've selected for editing (`Text` in this example). And we don't have to remember to close the quote; the editor does that for us. It's the same with any other delimiter---the editor constrains us to producing programs that are syntactically valid.
-
-Pretty simple. Let's see what happens if we open the selection and try to type some garbage:
-
-<video width="100%" height="auto" controls="true"><source src="videos/editing-text-err.mp4" type="video/mp4"></video>
-
-We're still allowed to type whatever we want, but if what you type is invalid (because it is syntactically invalid, as in this case, or ill-typed, which we'll see later), it won't be selectable. Thus, Unison programs are syntactically valid (well-formed) and well-typed _by construction_. There's also no separate compilation phase ([learn more](/2015-05-22/why-compile.html)) and code is always _immediately_ available for execution, as soon as you've finished editing it. The programmer should never have to [wait around for their code to compile](https://xkcd.com/303/).
-
-By the way, this thing that pops up when opening an expression for editing is called the _explorer_. Let's look at the explorer a bit more closely now---it has a lot of useful information in it.
-
-<video width="100%" height="auto" controls="true"><source src="videos/plus1.mp4" type="video/mp4"></video>
-
-First, when popping open the explorer, notice again it tells us the _type_ of the expression we've opened. No surprise, that expression (the 'target') has type 'Text'. It also gives us a list of valid replacements for the target. At the moment, there aren't any constraints on the type of any replacements, so anything goes. The list shown isn't necessarily complete, and we can refine the results just by typing more characters. In this video, we select the `+` function, applied to two arguments (the option `_ + _`), and advance to editing the first argument. Notice that the editor now gives us a _goal type_ of `Number` (inferred from the type of `+`), which is in bold at the top of the explorer.
-
-_Aside:_ In Unison, there are no 'import statements'. Everything in the Unison code store is available and searchable via the explorer; if there are too many results, just refine by providing more information. We can imagine having some notion of 'imports', but this would be a property of the _editing session_, it's not attached to the code in any way. Two people could open up the same piece of code and apply different imports to their editing session!
-
-Let's look at what happens if we try to choose something _ill-typed_ in the explorer:
-
-<video width="100%" height="auto" controls="true"><source src="videos/plus1-err.mp4" type="video/mp4"></video>
-
-We still learn the type of what we've entered (helpful for understanding where we've gone wrong), but since it doesn't match the goal type of `Number`, the editor won't let us select it! This experience of not being allowed to select a search result in the explorer is the closest we get to a type error. This seems limiting but it's not really; the programmer can insert _blanks_ anywhere in their program (deferred bits of code), build up fragments of code 'off to the side', and generally work in sketches, gradually bringing together bits of code. (FAQ: how do we make large-scale edits to a codebase without breaking things? See [this post for details](/2015-06-12/editing.html))
-
-_Aside:_ Type errors are a usability catastrophe, for both beginners [and experts](http://pchiusano.io/2015-03-26/type-errors.html), and language implementators invest huge amounts of time and engineering effort figuring out how to report errors 'well' (for [some definition of 'well'](https://gist.github.com/pchiusano/57edebe68e1c621360ca)). But when you think about it, it's a bit odd that the default way of editing programs is totally _unstructured_ raw text editing, which allows all kinds of edits that make _no sense whatsoever_. Why should we accept this assumption, which dates back to [the punchcard era of programming](http://pchiusano.io/2014-09-30/punchcard-era.html) when no other options existed?
-
-Okay, let's build something a little more interesting which shows off some more features. Things happen fast, you may want to pause to see the info shown in the explorer at various points:
-
-<video width="100%" height="auto" controls="true"><source src="videos/let-example.mp4" type="video/mp4"></video>
-
-Several new things are shown here:
-
-* We can declare multiple expressions and give them names using a `let` block.
-* Formatting of code is automatic. The programmer just focuses on writing the code; the editor picks a layout based on an allocated width. (Here, allocated width is constant, but we could grow or shrink allocated width based on the width of the enclosing container.)
-* The types of all local variables are shown in the explorer. Notice how the type of `employees` (a `Vector Text`) is shown when we are defining `salaries`. Likewise, the type of `x` in the `x -> 10000` function we pass to `map` is also shown (it's inferred to be `Text` since the `map` function is being applied to a `Vector Text`).
-* Autocomplete is type-directed---when we defined salaries, we did it by applying a function to `employees`. The editor could tell that `map _` was a valid completion (but not `map` or `map _ _`), just based on the types. And this idea can be taken much much further; we can incorporate richer type-directed search strategies into the explorer, and even let people write plugins to extend its capabilities. As [Conor McBride is fond of saying, types aren't just (or even primarily) about preventing errors, they also help you write less code!](https://www.youtube.com/watch?v=ad4BVmPni7A).
-* The explorer searchbox does 'fuzzy' matching. Though we use fuzzy matching for convenience and speed of entry, what gets _displayed_ is the proper name.
-* In all these videos, we're mostly using the keyboard to navigate and edit, and [a lot of thought has gone into making keyboard navigation feel fluid](/2015-10-14/fluent-editing.html). We could also use the mouse or screen taps to navigate and make selections, and an editor like this could even be adapted for use on a tablet.
-
-All right, so this editor is pretty neat, and we can imagine adding lots of bells and whistles to it (documentation and usage examples that slide out from the current explorer selection, for instance). But the editor is just a tiny piece of the overall project, and it's actually more like _a byproduct of a much bigger, and more important design goal_---we want it to be completely trivial to persist arbitrary Unison values, in a database or some persistent store, and we want it to be completely trivial for Unison nodes anywhere on the planet to exchange data _and computations_.
-
-Why is this so important? Well, let's look at the web as it exists today. All over the world, millions of software systems are sitting atop the web, and even within a single company (like say Google), there might be a fleet of different servers that communicate in some way to present some higher-level service (like a search engine, for instance). It is probably not an exaggeration to say that 90% of the code programmers write is just dealing with the _particulars of communication_---how to send values between nodes in these distributed systems, details of encoding and decoding, networking, dealing with persistence, etc. And then sandwiched in between all that is a tiny bit of 'interesting' computation or business logic.
-
-A good way to see how much overhead there is to think about how much code it would take to implement something like a search engine if the search index and all the documents being indexed fit in memory and existed as some in-memory data structures (might be a couple hundred LOC for something simple). And now compare that to how much code you need to represent conceptually the same data structure and algorithm, but distributed on 10,000 machines. Suddenly we seem to need 100x or even 1000x the amount of code, and an army of programmers. Is that really the best we can do?
-
-It's true that writing multi-machine / distributed systems has some [additional _essential complexity_](https://en.wikipedia.org/wiki/Fallacies_of_distributed_computing), but in Unison, we're trying to simplify things as much as possible and let programmers focus on the essence of what they're trying to do. We envision a world in which the set of Unison nodes connected to the internet form a global web, and any of the nodes in this web may trivially exchange absolutely any values in the Unison language, _including functions_. Doing this in a scalable way requires that we do something really radical.
-
-Before we get to the 'how', let's look at a piece of the Unison API for building distributed systems:
+Unison is a new programming language, currently under active development. It's a modern, statically-typed purely functional language, similar to Haskell, but with a unique ability to describe entire distributed systems with a single program. Here's a simple example:
 
 ```Haskell
-at : Node -> a -> Remote a
+-- comments start with `--`
+-- alice : Node, bob : Node
+
+x = factorial 6
+Remote.at alice
+  '( y = foo x -- happens on `alice` node
+     Remote.at bob
+       '( bar x y )) -- happens on `bob` node
 ```
 
-That is, we can transport any value at all to another Unison node, obtaining a handle to the computation so we can extend it further if we like. A `Remote a` is a description of a computation that may proceed on one or more nodes, and it comes equipped with a rich set of operations. Let's look at `map`:
+The `Remote.at` function introduces a "remote effect", where computation may proceed on multiple Unison nodes:
 
-```Haskell
-map : (a -> b) -> Remote a -> Remote b
-```
+* The `Remote.at alice` transfers control of the computation to the `alice` node.
+* The `foo x` call happens on the `alice` node.
+* Any required definitions (such as `foo` and `x`) will be dynamically deployed to the `alice` node and cached for future use.
+* The `Remote.at bob` transfers control of the rest of the computation to the `bob` node.
+* The `bar x y` computation happens on the `bob` node. Again, any needed definitions (`bar`, `x`, and `y`) will be dynamically deployed to the `bob` node.
 
-Let's see an example of this in action. We'll transport a value to another server, then continue the computation from there, using `map`:
+This dynamic transfer / deployment of arbitrary computations is possible because definitions in Unison are identified by a cryptographic hash of their content, _including the hashes of all dependencies_ (the hash is also "nameless" as it isn't affected by naming of variables). To transfer a computation, we send it to the recipient, and the recipient checks to see if the computation references any unknown hashes. Any unknown hashes are synced to the recipient before the transfer completes and the computation proceeds.
 
-<video width="100%" height="auto" controls="true"><source src="videos/remote-eval.mp4" type="video/mp4"></video>
+If you'd like to learn more about the project, the talk [How to write a search engine in 15 lines of code](http://unisonweb.org/2016-10-12/search.html) has more of an introduction to the language.
 
-In this video, we create a computation which runs on `server1`. The first part of the computation produces the list `["Alice","Bob"]`, and we continue the computation on `server1` using the function `onserver1`, declared in the `let` block. There are no restrictions on the function we pass to `map` or the values we pass to `at`; the values might have a million transitive dependencies; any missing dependencies will be synchronized to `server1` when the computation is evaluated and cached for later.
-
-_Aside:_ For more details on this API, as well as discussion of how it can be made secure, check out [this post](/2015-06-02/distributed-evaluation.html) which walks through the design in detail.
-
-With this API we get to be very precise about where computations take place, so in that sense it's very explicit, but we're also totally freed from the usual boilerplate and plumbing code we'd have to write when moving values and computations around in our distributed system. No JSON parsing or encoding, no low-level networking code, etc, we simply declare that we want a value transported to some other node, and that's it! We can continue our computation there, hop to any other node, and so on! Building distributed systems does have more sources of essential complexity... but the idea is that Unison lets us focus on the essence of the problem, not the mundane details.
-
-_Aside:_ The exact same principles apply to dealing with persistent state. We should be able to [trivially persist arbitrary values (including functions)](/2015-12-13/persistent-data-api.html), rather than having to deal with boilerplate converting to and from SQL or to and from JSON or whatever ad-hoc format is consumed by some NoSQL store.
-
-All right, now how is this achieved? The idea is simple, but it has far-reaching consequences. In Unison, values are identified not by name, but by a cryptographic _hash_ of their definition. That is, suppose I write a function: `sum`, for adding up a vector of numbers. In Unison, we identify that function by a hash of its implementation---the name `sum` is 'just' human-readable metadata associated with that hash (which the editor of course uses for display purposes and lookup). This has a number of very positive benefits:
-
-* Using content-based hash to uniquely identify everything means that all Unison nodes have a shared understanding of what each hash means (ignoring [astronomically tiny chance of hash collisions](/2015-09-30/hash-collisons.html)). Thus, to transport an arbitrary value from one node to another, the recipient node just asks for any hashes it doesn't already know about. Once all the required hashes are present on the recipient node, the computation can proceed from there. This sort of thing is difficult or impossible to achieve in languages that use names for identity. In Unison, it's easy.
-* It's trivial to persist arbitrary values in the Unison language and read them back anytime later. Persistence is just another serialization problem. Languages that do attempt to provide some platform-level serialization support have all sorts of fragility and problems introduced because names are used for identity (what if one of the types or libraries referenced has 'changed' in the time between the value being persisted and it being read?). In Unison, these concerns are entirely avoided.
-* Using content-based hash for identity gives us incremental typechecking 'for free'. Since the value associated with a hash never changes, we can compute its type once, and simply look it up when needed.
-* Refactorings like 'rename' become trivial---they are no longer implemented via text munging, just by updating the metadata associated with a hash, in a single place. More generally, tools for refactoring get way easier to build when the codebase is a structured value and not a blob of text files.
-
-But it also raises new challenges and questions, which Unison has needed to address:
-
-* Since it would be laborious and unreadable writing down hashes everwhere in the code, we can't really use a regular text editor to edit code. We need something more structured, like the Unison semantic editor we've already seen.
-* Using content-based hashes for everything means the codebase is actually a _purely functional data structure_. There is no such thing as 'modifying' a definition. If we edit a definition, it will have a new hash, and at least initially, nothing references that hash. But then, how do we make large-scale edits to a codebase? And what happens to version control, which can no longer be based on text? Happily, these questions also seem to have [very nice answers](/2015-06-12/editing.html).
-
-Modern software is built on layer after layer of foundational technologies and assumptions. In foundational work, the details matter. The Unison platform is tossing out some of these layers (many of which haven't been seriously questioned or revisited [in ages](http://pchiusano.github.io/2014-09-30/punchcard-era.html)) and growing something new, atop a very different set of foundational assumptions.
-
-### What's next?
-
-* The [design posts](/design) on this blog are a good place to get started understanding the architecture of Unison and where this is all going.
-* Check out the latest [project status updates](/updates).
-* For more background, see the [Unison tagged posts here](http://pchiusano.io/unison).
-* Consider [supporting the project on Patreon](https://www.patreon.com/pchiusano)!

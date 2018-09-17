@@ -2,12 +2,18 @@
 layout: default
 title: Main
 ---
+<!DOCTYPE HTML>
+<html lang="en-US">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="refresh" content="0;url=/posts/index.html">
+        <script type="text/javascript">
+            window.location.href = "/posts"
+        </script>
+        <title>Unison</title>
+    </head>
+    <body>
+    If you are not redirected automatically, follow the <a href='/2015-05-07/about.html'>link to About</a>
+    </body>
+</html>
 
-{% if site.posts.first != nil %}
-<h2 class="center"><a href="{{ site.posts.first.url }}#post-start">{{ site.posts.first.title }}</a></h2><br/>
-<p>{{ site.posts.first.excerpt | markdownify }}</p>
-<p class="center"><i><a href="{{ site.posts.first.url }}#post-start">full post</a></i></p>
-<br/>
-{% endif %}
-
-<h2 class="center"><a href="/posts">older posts</a></h2>

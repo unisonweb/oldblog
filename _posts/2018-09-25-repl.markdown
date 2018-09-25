@@ -5,9 +5,7 @@ title: Strange Loop, updates, rethinking the REPL and spreadsheets
 post_author: Paul Chiusano
 ---
 
-Hi folks, Paul here.
-
-One quick thing: Arya, Rúnar, and I will all be at [Strange Loop](https://www.thestrangeloop.com/) this week and [we'll be presenting on Unison at the Unsessions Thursday night](https://github.com/strangeloop/StrangeLoop2018/wiki/Unsessions#unison-programming-the-global-supercomputer). If you are reading this and are attending Strange Loop or ICFP, I hope you stop by.
+Hi folks, Paul here. One quick thing: Arya, Rúnar, and I will all be at [Strange Loop](https://www.thestrangeloop.com/) this week and [we'll be presenting on Unison at the Unsessions Thursday night](https://github.com/strangeloop/StrangeLoop2018/wiki/Unsessions#unison-programming-the-global-supercomputer). If you are reading this and are attending Strange Loop or ICFP, I hope you stop by.
 
 As for updates, we've been cranking away, and here's what's new:
 

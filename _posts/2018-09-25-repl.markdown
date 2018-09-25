@@ -1,0 +1,48 @@
+---
+layout: post
+categories: updates
+title: Strange Loop, updates, rethinking the REPL and spreadsheets
+post_author: Paul Chiusano
+---
+
+Hi folks, Paul here.
+
+One quick thing: Arya, Rúnar, and I will all be at [Strange Loop](https://www.thestrangeloop.com/) this week and [we'll be presenting on Unison at the Unsessions Thursday night](https://github.com/strangeloop/StrangeLoop2018/wiki/Unsessions#unison-programming-the-global-supercomputer). If you are reading this and are attending Strange Loop or ICFP, I hope you stop by.
+
+As for updates, we've been cranking away, and here's what's new:
+
+* Rúnar gave a talk on Unison at Lambda World last week! People have said [some rather nice](https://twitter.com/argumatronic/status/1042105539004514305) [things about it](https://twitter.com/yifan_xing_e/status/1042294371763146752). I'm really looking forward to seeing the video once it's posted.
+* We've started on the Unison codebase editor. A lot of design work went into this (still ongoing), and we started implementing some bits and pieces of it. I'm incredibly excited about the direction this is headed and I want to do a longer writeup soon.
+* A shoutout to new contributor [Chris Gibbs](https://github.com/atacratic)! 🎉 He recently merged some work on a pretty-printer and has been helping with design exploration for the Unison codebase editor.
+
+### Rethinking REPLs and notebooks
+
+Now that we have a batch mode compiler for Unison we're thinking about how to make exploring and editing Unison programs a more interactive experience.
+
+First, REPLs. Let's face it, a REPL isn't how you'd design an interactive editing experience today, even if you're sticking to plain text:
+
+* I often find myself doing some exploring in a REPL only to realize "damn, I should have just put this in a file."
+* REPLs have less friction so you're encouraged to start using them, and yet they are so limited that you're punished with a transition once you do anything nontrivial. Even something as simple as moving a few definitions from the REPL to a file is more friction than it needs to be, as you need to strip out the garbage command prompts interleaved with useful program text!
+* Editing things one line at a time, outside your text editor, in a terminal emulator, is painful. And yet, if you use a REPL, you almost always end up constructing what are really multi-line programs in the REPL, as you often need to declare a few variables before you can construct the expression whose result you want to see. When you want to refresh your REPL session (I find it crazy that this is something many REPLs still don't support), you're now hitting the up arrow to find your past commands and rerun your little program fragment. That up arrow thing is an O(n^2) algorithm if you want to rerun a program that's n commands long... or you're retyping the same program over and over again. Gak.
+* Your REPL session doesn't know about the imports it needs to do its job. That is, you're writing a file `Foo.hs`, and decide you want to explore it a bit in the REPL. You now find yourself repeating some import boilerplate at the start of the REPL session just to get to the point where you can do anything useful.
+* Lastly: the default REPL output, after the 'eval' part, is often unreadable, unless you're written a bunch of boilerplate to make the values you're working with displayable. I think every value in your programming language should be displayable in a nice pretty-printed form, split onto multiple lines, without you needing to do any work whatsoever. That includes functions.
+
+All these issues have a single cause: REPLs place an artificial barrier between _using_ or _exploring_ a library and _developing_ a library. When you're developing the library, you edit your source file. When you (or your library's users) want to quickly test it out, you use the REPL. In practice, there isn't such a clear separation between these activities and forcing users to decide in advance is bad DX because the transition between REPL and a file is an annoying speedbump.
+
+A better way to do things is to include interactivity in the basic model of program editing. Rather than your program being a static blob of text that must be given life via a separate tool, make the program a live creature that actually does things whenever the file is changed.
+
+This isn't a new idea at all... this is what a spreadsheet is, though spreadsheets don't support abstraction well at all. However, we can take the basic idea of spreadsheets and apply it to a "real" programming language. Here's an early result, which will be a component of the Unison codebase editor:
+
+<iframe src="https://player.vimeo.com/video/291648190?quality=720p" width="640" height="547" frameborder="0" allowfullscreen></iframe>
+
+_Aside:_ [Here's the PR with more details if you're interested](https://github.com/unisonweb/unison/pull/252)).
+
+Using this interface is quite nice, even though it's still rough around the edges. I was not even fully aware of all the sources of friction I listed above until I used a tool that stripped them away. It's amazing how much low-hanging fruit there is if you take a step back and have a bit of a rethink about how you'd like things to work.
+
+How does this relate to [notebook-style interfaces](http://jupyter.org/)? I'm not totally sure. Notebooks de-emphasize the dataflow aspect of spreadsheets and focus more on making the editing experience richer. I quite like their ability to embed both textual and graphical elements in the editor and think that's an important thing to have in a program editor. Notebooks also get us away from the REPL problem of having to edit your program one line at a time. But I'd say that notebooks as they now exist maintain that separation between using a library and developing it. People end up sharing code by copy, pasting, and modifying existing notebooks, a lot like they do with spreadsheets. Why is that?
+
+With a notebook, _the definitions live within the notebook_, rather than the notebook merely _referencing_ definitions that exist elsewhere. That is, while a notebook makes it easier to _develop_ code (since you aren't confined to creating programs one line at a time), you can't easily share that code with others in the same first-class way as library authors. This encourages an artificial separation between library authors and library users even though no such separation really exists. Library "users" get a nice interface to the library, but if they want to share their code in a first-class way, they need to switch to a different set of tools.
+
+I'm interested to see how we can make this experience better in a language like Unison where many of the assumptions are different.
+
+Comments are welcome, I'm interested to hear what folks think. What do you like or dislike about REPLs, notebook style interfaces, spreadsheets, or other alternatives to program editing and exploration?

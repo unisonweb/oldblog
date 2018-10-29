@@ -1,0 +1,16 @@
+---
+layout: post
+categories: [updates]
+post_author: Paul Chiusano
+title: Boston Unison meetup and upcomming talk at Boston Haskell
+---
+
+Hi folks, this is a very short post with some updates:
+
+* We'll be giving a talk introducing Unison and showing the current status at [Boston Haskell](https://www.meetup.com/Boston-Haskell/events/255701930/) next Monday. Please come join if you're interested.
+* There's now a [Boston Unison meetup](https://www.meetup.com/Boston-Unison/). I think we'll probably have our first meeting in the next couple months. If you're interested in this stuff and are in the area, definitely sign up and hope to see you at the first meeting!
+* Strange Loop was great, Rúnar gave a talk at one of the "Unsessions". I think it was well received and people had lots of good questions. We should try to put together a Unison FAQ at some point. 
+
+On the technical front, we have been cranking away on the Unison codebase editor and making good progress. We'll be demoing the current state of things at the Boston Haskell talk next week. 
+
+Lastly, we have some other events coming up. I'm giving a [Unison talk at Scale By The Bay](https://scalebythebay2018.sched.com/event/FmFW/programming-the-worldwide-elastic-supercomputer-with-unison) and Rúnar is giving a [Unison talk at Øredev](http://oredev.org/2018/line-up/r-nar-bjarnason).

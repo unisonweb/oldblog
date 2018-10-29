@@ -2,7 +2,7 @@
 layout: post
 categories: [updates]
 post_author: Paul Chiusano
-title: Boston Unison meetup and upcomming talk at Boston Haskell
+title: Boston Unison meetup and upcoming talk at Boston Haskell
 ---
 
 Hi folks, this is a very short post with some updates:

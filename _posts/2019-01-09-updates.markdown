@@ -13,7 +13,7 @@ Hey everyone, Rúnar here. It's been a while since our last update. We've been b
 * Paul's talk [at Scale by the Bay](https://www.youtube.com/watch?v=v7L-5AQQkbM) is also up.
 * I gave a talk on Unison at Øredev in Malmö, and also at the Reykjavík Functional Programming meetup. [A video is available of the latter](https://www.facebook.com/enkidudidu/videos/10218046671060964/).
 * Arya did the hallway track at NeurIPS and got a sense of how researchers and industry are (or aren't) managing their distributed machine learning applications. This seems a good candidate for a Unison library.
-* We created a number of GitHub issues and marked some of them as "good first issue" and "help wanted". If you've been thinking about contributing to Unison, this might be a good place to start. We'll add to these issues as we think of more ways contributors can help. Go to [https://github.com/unisonweb/unison/issues](https://github.com/unisonweb/unison/issues) to look at the list.
+* We created a number of GitHub issues and marked some of them as "good first issue" and "help wanted". If you've been thinking about contributing to Unison, this might be a good place to start. We'll add to these issues as we think of more ways contributors can help. Go to [https://github.com/unisonweb/unison/issues ](https://github.com/unisonweb/unison/issues) to look at the list.
 
 ## Codebase editor progress
 
@@ -64,15 +64,7 @@ Now that `replicate` is in my codebase, I can actually throw away the scratch fi
 
 ![view replicate](/resources/viewreplicate.png)
 
-### More features
-
-We're currently adding more features to the Codebase Editor. Right now we're making it easier to edit existing definitions that have a lot of dependencies, through a kind of structured refactoring session.
-
-Here's the feature set we have so far:
-
-![unison help](/resources/unisonhelp.png)
-
-### Codebase structure
+### Git-friendly codebase structure
 
 We really want to allow Unison developers to use good tools they're already familiar with like their favourite text editor, and Git. To that end, we've made it so that the codebase is just a bunch of (binary) files that can be versioned with Git.
 
@@ -84,4 +76,12 @@ Since everything is indexed by hash, you'll never actually change any file, so G
 
 See [the Codebase Editor design document](https://github.com/unisonweb/unison/blob/master/docs/codebase-editor-design.markdown) for more information.
 
+
+### More features
+
+We're currently adding more features to the Codebase Editor. Right now we're making it easier to edit existing definitions that have a lot of dependencies, through a kind of structured refactoring session.
+
+Here's the feature set we have so far:
+
+![unison help](/resources/unisonhelp.png)
 

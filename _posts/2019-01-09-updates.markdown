@@ -40,7 +40,7 @@ Instead of having a REPL in the traditional sense, Unison is watching for change
 
 ![replicate](/resources/replicate.png)
 
-If I save this file, my Unison session immediately shows this:
+If I save the file, my Unison session immediately shows this:
 
 ![saved scratch.u](/resources/scratchu.png)
 
@@ -48,13 +48,13 @@ Note that it says it's "evaluating any watch expressions". I can add a watch exp
 
 ![replicate 3 lambda](/resources/replicatelambda.png)
 
-If I save this, Unison comes back with the evaluated result of this expression:
+If I save again, Unison comes back with the evaluated result of this expression:
 
 ![eval replicate 3 lambda](/resources/evalreplicatelambda.png)
 
 ### Adding and viewing definitions
 
-I'm happy with this, so I'll ask Unison to add `replicate` to my codebase:
+I'm happy with that, so I'll ask Unison to add `replicate` to my codebase:
 
 ![unison add](/resources/unisonadd.png)
 
@@ -63,6 +63,7 @@ If I had put more (well typed) definitions in my file, Unison would have happily
 Now that `replicate` is in my codebase, I can actually throw away the scratch file. If I need the definition of `replicate` again, I can always ask Unison for it:
 
 ![view replicate](/resources/viewreplicate.png)
+
 
 ### Git-friendly codebase structure
 
@@ -77,6 +78,7 @@ Since everything is indexed by hash, you'll never actually change any file, so G
 See [the Codebase Editor design document](https://github.com/unisonweb/unison/blob/master/docs/codebase-editor-design.markdown) for more information.
 
 
+
 ### More features
 
 We're currently adding more features to the Codebase Editor. Right now we're making it easier to edit existing definitions that have a lot of dependencies, through a kind of structured refactoring session.
@@ -84,4 +86,5 @@ We're currently adding more features to the Codebase Editor. Right now we're mak
 Here's the feature set we have so far:
 
 ![unison help](/resources/unisonhelp.png)
+
 

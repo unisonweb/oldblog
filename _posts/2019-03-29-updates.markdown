@@ -4,7 +4,9 @@ categories: [updates]
 post_author: Arya Irani
 title: March Update
 ---
-Hi all — it’s been 464 commits since our last update post.  Here's what's happened:
+Hi all — it’s been 464 commits since our last update post, and I hardly know where to start...  
+
+So, in arbitrary order:
 
 ## The first Unison Meetup
 …went off without a hitch!  Join the [Boston Unison meetup](https://www.meetup.com/Boston-Unison/) if you might like to come out to the next one. On Tuesday, about a dozen functional programming and future-of-computing enthusiasts gathered from around the greater Boston area to chat about their development experience, and let us show off our current progress, including:

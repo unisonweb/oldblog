@@ -103,12 +103,12 @@ we get:
 Not bad!
 
 ## Bugfixes
-We’ve fixed a lot of bugs. 😅  Thank you to the masochistic handful who’ve been using the tool and reporting them, and special thanks to @noahaasis ([#328](https://github.com/unisonweb/unison/pulls/328)), @francisdb ([#333](https://github.com/unisonweb/unison/pull/333), [#392](https://github.com/unisonweb/unison/pulls/392)) , @mrziuban ([#382](https://github.com/unisonweb/unison/pulls/382), [#385](https://github.com/unisonweb/unison/pulls/385), @benfradet([#418](https://github.com/unisonweb/unison/pull/418)),  for their fixes.
+We’ve fixed a lot of bugs. 😅  Thank you to the masochistic handful who’ve been using the tool and reporting them, and special thanks to @noahaasis ([#328](https://github.com/unisonweb/unison/pull/328)), @francisdb ([#333](https://github.com/unisonweb/unison/pull/333), [#392](https://github.com/unisonweb/unison/pull/392)) , @mrziuban ([#382](https://github.com/unisonweb/unison/pull/382), [#385](https://github.com/unisonweb/unison/pull/385)), @benfradet([#418](https://github.com/unisonweb/unison/pull/418)),  for their fixes.
 
 ## Unison-Related Projects
 Discovering new Unison projects in the wild has been super gratifying.  Here are two:
-* https://github.com/francisdb/unison-json - JSON AST / parser / printer, written in Unison.
-* https://github.com/BenFradet/vscode-unison - Unison syntax highlighting for VS Code.
+* <https://github.com/francisdb/unison-json> - JSON AST / parser / printer, written in Unison.
+* <https://github.com/BenFradet/vscode-unison> - Unison syntax highlighting for VS Code.
 
 ## What’s up next?
 The most immediate next steps towards the M1 release of the codebase editor include:

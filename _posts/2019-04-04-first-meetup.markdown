@@ -41,7 +41,7 @@ This makes for a nice little interactive loop when developing code, and it repla
 
 From there, Rúnar wrote a function `unfold`, which generates a list by repeatedly applying a function to some state to produce an output value and a new state. He then used it to generate the powers of 2 less than 100:
 
-```Haskell
+``` haskell
 use Optional None Some
 
 unfold : s -> (s -> Optional (a, s)) -> [a]

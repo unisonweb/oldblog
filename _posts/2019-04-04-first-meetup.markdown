@@ -15,7 +15,7 @@ He showed a little bit of the actual repository structure too: the codebase isn'
 
 When you start up `unison`, it watches for changes to `.u` files (which contain Unison code) in the current directory or any of its subdirectories. When it detects a change, it parses and typechecks any definitions in the file and then evaluates any "watch expressions", which are just lines starting with `>`. So one of the first things Rúnar did was open up a file `meetup1.u`, and type:
 
-```Haskell
+``` haskell
 > 4 + 4
 ```
 
@@ -67,7 +67,7 @@ Rúnar showed a few other features of the `unison` tool: you can easily search f
 
 And he then did a `rename Optional.None Nothing` and `rename Optional.Some Just`, renaming those two constructors of `Optional` to `Nothing` and `Just`. A subsequent `view unfold` showed this rename had been propagated:
 
-```Haskell
+``` haskell
 unfold : s -> (s -> Optional (a, s)) -> [a]
 unfold s f = case f s of
   Nothing -> []
@@ -117,7 +117,7 @@ First I started implemented `sliding`, using `unfold`. I showed how you can type
 
 Eventually I got:
 
-```Haskell
+``` haskell
 sliding : Text -> [Text]
 sliding t =
   step t = if Text.size t < 2 then None
@@ -131,7 +131,7 @@ sliding t =
 
 And then after that worked fine, I went ahead and used `sliding` to implement the similarity function. The similarity function is based on comparing the size of the intersection of two sets vs the size of their union, sometimes called the [Jacaard Index](https://en.wikipedia.org/wiki/Jaccard_index). Here's what I implemented in Unison:
 
-```Haskell
+``` haskell
 -- number in 0 to 100 where 100 means sets are the same
 -- 0 they are totally different
 jacaard : Set a -> Set a -> Nat

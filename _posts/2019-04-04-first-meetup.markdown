@@ -1,5 +1,5 @@
 ---
-title: Writeup of first ever Unison meetup
+title: Writeup of our first Unison meetup
 categories: [updates]
 post_author: Paul Chiusano
 ---

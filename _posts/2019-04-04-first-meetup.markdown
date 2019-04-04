@@ -33,7 +33,7 @@ master>
 
 Here's a screenshot of the setup:
 
-![Basic setup writing Unison](/2019-03-04/basic-setup.png)
+![Basic setup writing Unison](/2019-04-04/basic-setup.png)
 
 This makes for a nice little interactive loop when developing code, and it replaces the need for a REPL (no more typing import statements or switching to a separate line-oriented editor to quickly test your code).
 
@@ -53,7 +53,7 @@ unfold s f = case f s of
                  else None)
 ```
 
-![Unfold implementation](/2019-03-04/unfold.png)
+![Unfold implementation](/2019-04-04/unfold.png)
 
 Once he was satisfied with that, he typed `add` in the command line tool to add the `unfold` definition to the codebase. He then __deleted__ the code from his `meetup1.u` scratch file!! We don't need the original source once the code has been slurped up into the codebase since we can view or edit it at any time later. He demonstrated this by typing `view unfold` which showed the very same `unfold` function he just wrote (but autoformatted) and then `edit unfold` which added this source code to the top of his scratch file for further editing.
 
@@ -113,7 +113,7 @@ Notice it has three character pairs in common (`{"Al", "li", "ic"}`), among 6 to
 
 First I started implemented `sliding`, using `unfold`. I showed how you can type any unbound symbol (I like `hmm`) and have Unison tell you what type it's expecting there, which is handy when filling in arguments.
 
-![Using unfold to generate adjacent character pairs (1)](/2019-03-04/sliding.png)
+![Using unfold to generate adjacent character pairs (1)](/2019-04-04/sliding.png)
 
 Eventually I got:
 
@@ -127,7 +127,7 @@ sliding t =
 > sliding "Alicia"
 ```
 
-![Using unfold to generate adjacent character pairs (2)](/2019-03-04/sliding.png)
+![Using unfold to generate adjacent character pairs (2)](/2019-04-04/sliding.png)
 
 And then after that worked fine, I went ahead and used `sliding` to implement the similarity function. The similarity function is based on comparing the size of the intersection of two sets vs the size of their union, sometimes called the [Jacaard Index](https://en.wikipedia.org/wiki/Jaccard_index). Here's what I implemented in Unison:
 

@@ -116,7 +116,7 @@ Rúnar then handed it over to me to implement something a little less trivial. I
 
 Notice it has three character pairs in common (`{"Al", "li", "ic"}`), among 6 total in their union. So a simple metric of their similarity is just the size of the intersection divided by the size of the union (sometimes called the [Jacaard index](https://en.wikipedia.org/wiki/Jaccard_index)).
 
-First I started implemented `sliding`, using `unfold`. I showed how you can type any unbound symbol (I like `hmm`) and have Unison tell you what type it's expecting there, which is handy when filling in arguments.
+First I started implementing `sliding`, a function to get all these adjacent character pairs, using `unfold`. I showed how you can type any unbound symbol (I like `hmm`) and have Unison tell you what type it's expecting there, which is handy when filling in arguments.
 
 ![Using unfold to generate adjacent character pairs (1)](/2019-04-04/sliding.png)
 

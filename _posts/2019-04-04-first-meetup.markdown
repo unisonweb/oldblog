@@ -132,7 +132,7 @@ sliding t =
 > sliding "Alicia"
 ```
 
-![Using unfold to generate adjacent character pairs (2)](/2019-04-04/sliding.png)
+![Using unfold to generate adjacent character pairs (2)](/2019-04-04/sliding2.png)
 
 And then after that worked fine, I went ahead and used `sliding` to implement the similarity function:
 

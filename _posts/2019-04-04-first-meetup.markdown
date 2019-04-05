@@ -134,7 +134,7 @@ sliding t =
 
 ![Using unfold to generate adjacent character pairs (2)](/2019-04-04/sliding.png)
 
-And then after that worked fine, I went ahead and used `sliding` to implement the similarity function. The similarity function is based on comparing the size of the intersection of two sets vs the size of their union, sometimes called the [Jacaard Index](https://en.wikipedia.org/wiki/Jaccard_index). Here's what I implemented in Unison:
+And then after that worked fine, I went ahead and used `sliding` to implement the similarity function:
 
 ``` haskell
 -- number in 0 to 100 where 100 means sets are the same
